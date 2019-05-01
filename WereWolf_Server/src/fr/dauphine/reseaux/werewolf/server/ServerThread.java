@@ -1,4 +1,4 @@
-package fr.dauphine.reseaux.werewolf.server;
+﻿package fr.dauphine.reseaux.werewolf.server;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

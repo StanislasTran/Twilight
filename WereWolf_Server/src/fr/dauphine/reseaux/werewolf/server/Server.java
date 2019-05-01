@@ -22,10 +22,10 @@ import fr.dauphine.reseaux.werewolf.server.gameObjects.Role;
 
 public class Server {
 
-	private static final String DEBUT_DU_JEU = "Bienvenue sur le jeu du Loup-Garou! Le jeu peut commencer. Nous entrons dans une nuit noire � Thiercelieux, les villageois dorment profondemment ...\n\n"
+	private static final String DEBUT_DU_JEU = "Bienvenue sur le jeu du Loup-Garou! Le jeu peut commencer. \n Nous entrons dans une nuit noire  Thiercelieux, les villageois dorment profondemment ...\n\n"
 			+ "-------------------------------------------------------\n";
 
-	// Dur�e du tour des loup-garous (ms)
+	// Durée du tour des loup-garous (ms)
 	private static final long DUREE_TOUR = 30000;
 
 	JFrame serverGui;
@@ -34,12 +34,12 @@ public class Server {
 	private Socket socket;
 	public Hashtable<Socket, ObjectOutputStream> outputStreams;
 	public Hashtable<String, ObjectOutputStream> clients;
-
+	
 	// Game state
 
 	private Map<String, Role> roleMap;
 	private Map<String, String> voteMap;
-
+	private Role roleTurn;
 	// constructor
 	public Server(int port) throws IOException {
 		// Simple Gui for Server
@@ -55,7 +55,7 @@ public class Server {
 
 		roleMap = new HashMap<>();
 		voteMap = new HashMap<>();
-
+		
 		serverSocket = new ServerSocket(port);
 		showMessage("Waiting for clients at " + serverSocket);
 	}
@@ -155,25 +155,55 @@ public class Server {
 	// GAME METHODS
 
 	public void START_GAME() throws InterruptedException {
+		
+		boolean voyantePower=true;//gerer si la voyante a utilisé son pouvoir
+		boolean sorcierePower=true;//gerer si la voyante a utilisé ses pouvoirs
 		try {
-			Initiate_Role();
+			InitiateRole();
 			sendToAll("@Narrator;" + DEBUT_DU_JEU);
 			Thread.sleep(2000);
 
 			while (!gameFinished()) {
+				this.roleTurn=Role.LOUPGAROU;
+
 				sendToAll("@Narrator;"
-						+ "Les loups-garous se r�veillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
+						+ "Les loups-garous se réveillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
 				Thread.sleep(DUREE_TOUR);
 
 				String eliminatedPlayer = eliminatedPlayer();
+				
+				this.roleTurn=Role.SORCIER;
+				
+				sendToAll("@Narrator;" + "La sorcière ce réveille");
+				//envoyer un MP pour lui dire qui est mort
+				
+				sendToAll("@Narrator;"+"désirez vous tuer quelqu'un ?");
+				// implémenter cette partie 
+				
+				Thread.sleep(1); //à changer quand on aura implémenté le machin
+				
+				sendToAll("@Narrator;"+"La sorciere retourne dormir");
+				
+				this.roleTurn=Role.VOYANT;
+				
+				sendToAll("@Narrator;" + "La Voyante se réveille");
+			
+				
+				sendToAll("@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
+				// à implémenter aussi
+				
+				Thread.sleep(1);
 				roleMap.remove(eliminatedPlayer);
-				sendToAll("@Narrator;" + "Le jour se l�ve: " + eliminatedPlayer + " est mort :( !");
+				sendToAll("@Narrator;" + "Le jour se lève: les vilageois se réveillent et découvrent avec effroi que" + eliminatedPlayer + " est mort :( !");
+				sendToAll("@Narrator;" + "De suite les villageois se concertent et décident de voter pour désigner un coupable ('/vote PSEUDO' pour voter contre la cible)");
+				Thread.sleep(DUREE_TOUR);
+				
 			}
 
 			if (winner().equals(Role.LOUPGAROU)) {
-				sendToAll("@Narrator;Les loups-garous ont gagn� !");
+				sendToAll("@Narrator;Les loups-garous ont gagné !");
 			} else {
-				sendToAll("@Narrator;Les villageois ont gagn� !");
+				sendToAll("@Narrator;Les villageois ont gagné !");
 			}
 		} catch (IOException e) {
 
@@ -207,28 +237,59 @@ public class Server {
 			return null;
 	}
 
-	private void Initiate_Role() throws IOException {
+	private void InitiateRole() throws IOException {
 		int nbPlayer = clients.size();
 		Set<String> players = clients.keySet();
 
 		LinkedList<Role> roles = new LinkedList<>();
 
-		switch (nbPlayer) {
-		case 2:
+		if (nbPlayer == 2) {
+
 			roles.add(Role.LOUPGAROU);
 			roles.add(Role.VILLAGEOIS);
-			break;
-		case 3:
+		}
+		if (nbPlayer == 3) {
+
 			roles.add(Role.LOUPGAROU);
 			roles.add(Role.VILLAGEOIS);
 			roles.add(Role.VILLAGEOIS);
-			break;
+		}
+
+		if (nbPlayer >= 4 && nbPlayer < 7) {
+
+			int nbVillageois = nbPlayer - 3;
+
+			for (int i = 0; i < nbVillageois; i++) {
+				roles.add(Role.VILLAGEOIS);
+
+			}
+			roles.add(Role.LOUPGAROU);
+			roles.add(Role.SORCIERE);
+			roles.add(Role.VILLAGEOIS);
+
+		}
+
+		if (nbPlayer >= 7 && nbPlayer <= 11) {
+
+			int nbVillageois = nbPlayer - 4;
+
+			for (int i = 0; i < nbVillageois; i++) {
+				roles.add(Role.VILLAGEOIS);
+
+			}
+			roles.add(Role.LOUPGAROU);
+			roles.add(Role.VILLAGEOIS);
+			roles.add(Role.SORCIERE);
+			roles.add(Role.VILLAGEOIS);
+
 		}
 
 		Collections.sort(roles);
 
 		for (String player : players) {
+			System.out.println(roles.getFirst());
 			roleMap.put(player, roles.removeFirst());
+			
 		}
 
 		// send to all player their role
