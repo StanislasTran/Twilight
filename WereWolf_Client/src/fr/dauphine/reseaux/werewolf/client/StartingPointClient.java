@@ -1,4 +1,4 @@
-package fr.dauphine.reseaux.werewolf.client;
+﻿package fr.dauphine.reseaux.werewolf.client;
 import java.io.*;
 import java.net.*;
 

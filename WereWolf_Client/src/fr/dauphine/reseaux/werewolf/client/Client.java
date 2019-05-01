@@ -1,4 +1,4 @@
-package fr.dauphine.reseaux.werewolf.client;
+﻿package fr.dauphine.reseaux.werewolf.client;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
