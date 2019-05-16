@@ -41,7 +41,7 @@ public class Server {
 
 	// contain users in the roomSelection
 	public Set<String> roomSelection;
-	public Map<String, Room> rooms;
+	private Map<String, Room> rooms;
 
 	// Game state
 
@@ -99,12 +99,11 @@ public class Server {
 
 		clients.get(username).writeObject(roleMap.get(username));
 	}
-	
-	
+
 	/*
 	 *
 	 *
-	 *sending message methods
+	 * sending message methods
 	 *
 	 *
 	 */
@@ -118,6 +117,23 @@ public class Server {
 	public void sendToSelectionRoom(Object data) throws IOException {
 		for (String userName : roomSelection) {
 			synchronized (roomSelection) {
+				ObjectOutputStream tempOutput = clients.get(userName);
+				tempOutput.writeObject(data);
+				tempOutput.flush();
+
+			}
+		}
+	}
+
+	/**
+	 * send the data to all user in the Room room
+	 * 
+	 * @param data
+	 * @throws IOException
+	 */
+	public void sendToRoom(Room room, Object data) throws IOException {
+		for (String userName : room.getUsers()) {
+			synchronized (room) {
 				ObjectOutputStream tempOutput = clients.get(userName);
 				tempOutput.writeObject(data);
 				tempOutput.flush();
@@ -179,7 +195,8 @@ public class Server {
 
 	}
 
-	/********************
+	/**
+	 * @param location ******************
 	 * 
 	 * 
 	 * 
@@ -192,8 +209,8 @@ public class Server {
 
 	// GAME METHODS
 
-	public void startGame() throws InterruptedException {
-
+	public void startGame(Room location) throws InterruptedException {
+		
 		boolean voyantePower = true;// gerer si la voyante a utilisé son pouvoir
 		boolean sorcierePower = true;// gerer si la voyante a utilisé ses pouvoirs
 		try {
@@ -204,7 +221,7 @@ public class Server {
 			while (!gameFinished()) {
 				this.roleTurn = Role.LOUPGAROU;
 
-				sendToAll("@Narrator;"
+				sendToRoom(location,"@Narrator;"
 						+ "Les loups-garous se réveillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
 				Thread.sleep(DUREE_TOUR);
 
@@ -212,37 +229,37 @@ public class Server {
 
 				this.roleTurn = Role.SORCIERE;
 
-				sendToAll("@Narrator;" + "La sorcière ce réveille");
+				sendToRoom(location,"@Narrator;" + "La sorcière ce réveille");
 				// envoyer un MP pour lui dire qui est mort
 
-				sendToAll("@Narrator;" + "désirez vous tuer quelqu'un ?");
+				sendToRoom(location,"@Narrator;" + "désirez vous tuer quelqu'un ?");
 				// implémenter cette partie
 
 				Thread.sleep(1); // à changer quand on aura implémenté le machin
 
-				sendToAll("@Narrator;" + "La sorciere retourne dormir");
+				sendToRoom(location,"@Narrator;" + "La sorciere retourne dormir");
 
 				this.roleTurn = Role.VOYANT;
 
-				sendToAll("@Narrator;" + "La Voyante se réveille");
+				sendToRoom(location,"@Narrator;" + "La Voyante se réveille");
 
-				sendToAll("@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
+				sendToRoom(location,"@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
 				// à implémenter aussi
 
 				Thread.sleep(1);
 				roleMap.remove(eliminatedPlayer);
-				sendToAll("@Narrator;" + "Le jour se lève: les vilageois se réveillent et découvrent avec effroi que"
+				sendToRoom(location,"@Narrator;" + "Le jour se lève: les vilageois se réveillent et découvrent avec effroi que"
 						+ eliminatedPlayer + " est mort :( !");
-				sendToAll("@Narrator;"
+				sendToRoom(location,"@Narrator;"
 						+ "De suite les villageois se concertent et décident de voter pour désigner un coupable ('/vote PSEUDO' pour voter contre la cible)");
 				Thread.sleep(DUREE_TOUR);
 
 			}
 
 			if (winner().equals(Role.LOUPGAROU)) {
-				sendToAll("@Narrator;Les loups-garous ont gagné !");
+				sendToRoom(location,"@Narrator;Les loups-garous ont gagné !");
 			} else {
-				sendToAll("@Narrator;Les villageois ont gagné !");
+				sendToRoom(location,"@Narrator;Les villageois ont gagné !");
 			}
 		} catch (IOException e) {
 
@@ -273,7 +290,13 @@ public class Server {
 
 		this.rooms.put(name, new Room(name, user, Integer.parseInt(maxSize)));
 		System.out.println(rooms.keySet().toString());
+		roomSelection.remove(user);
+		
 		sendToSelectionRoom("ROOM" + rooms.keySet().toString());
+		sendToRoom(rooms.get(name),rooms.get(name).userKey());
+
+		System.out.println("ok");
+		
 
 	}
 
@@ -409,10 +432,44 @@ public class Server {
 	 * Join the room entered in parameter
 	 * 
 	 * @param roomName
+	 * @throws IOException
 	 */
-	public void joinRoom(String userName, String roomName) {
+	public void joinRoom(String userName, String roomName) throws IOException {
+		System.out.println("entre dans le join");
 		rooms.get(roomName).addUsers(userName);
-
+		roomSelection.remove(userName);
+		sendToRoom(rooms.get(roomName),rooms.get(roomName).userKey());
+		
+		System.out.println("sort du join");
 	}
+
+	/**
+	 * @return the roomSelection
+	 */
+	public Set<String> getRoomSelection() {
+		return roomSelection;
+	}
+
+	/**
+	 * @return the rooms
+	 */
+	public Map<String, Room> getRooms() {
+		return rooms;
+	}
+
+	/**
+	 * @param roomSelection the roomSelection to set
+	 */
+	public void setRoomSelection(Set<String> roomSelection) {
+		this.roomSelection = roomSelection;
+	}
+
+	/**
+	 * @param rooms the rooms to set
+	 */
+	public void setRooms(Map<String, Room> rooms) {
+		this.rooms = rooms;
+	}
+	
 
 }

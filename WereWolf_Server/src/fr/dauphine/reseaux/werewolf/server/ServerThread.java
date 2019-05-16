@@ -15,10 +15,14 @@ public class ServerThread extends Thread {
 	private String username;
 	Object message;
 
+	private Room location;
+
 	public ServerThread(Server server, Socket socket) throws IOException, ClassNotFoundException {
 		// TODO Auto-generated constructor stub
 		this.server = server;
 		this.socket = socket;
+
+		location = null;
 		output = new ObjectOutputStream(this.socket.getOutputStream());
 		output.flush();
 		input = new ObjectInputStream(this.socket.getInputStream());
@@ -27,11 +31,11 @@ public class ServerThread extends Thread {
 
 		server.clients.put(username, output);
 		server.outputStreams.put(socket, output);
-		
-		//add the player in selectionRoom
+
+		// add the player in selectionRoom
 		server.roomSelection.add(username);
 
-		server.sendToAll("!" + server.clients.keySet());
+		server.sendToSelectionRoom("!" + server.getRooms().keySet());
 
 		server.showMessage("\n" + username + "(" + socket.getInetAddress().getHostAddress() + ") is online");
 		// starting the thread
@@ -57,30 +61,36 @@ public class ServerThread extends Thread {
 					String command = tabMsg[2];
 
 					if (command.startsWith("/start")) {
-						new Thread(new Runnable() {
+						if (location.getHost() != this.username) {
+							System.out.println("your not the host");
+							// mettre ca sur le chat
+						} else {
+							new Thread(new Runnable() {
 
-							@Override
-							public void run() {
-								try {
-									server.startGame();
-								} catch (InterruptedException e) {
+								@Override
+								public void run() {
+									try {
+										server.startGame(location);
+									} catch (InterruptedException e) {
 
+									}
 								}
-							}
-						}).start();
+							}).start();
+						}
 
 					} else if (command.startsWith("/createRoom")) {
 
 						String roomName = command.split(" ")[1];
 						String maxSize = command.split(" ")[2];
-						
+
 						server.createRoom(roomName, username, maxSize);
+						location = server.getRooms().get(roomName);
 						System.out.println("room created");
-						
-					}else if (command.startsWith("/join")) {
-						String roomName=command.split(" ")[1];
-						server.joinRoom(username,roomName);
-						
+
+					} else if (command.startsWith("/join")) {
+						String roomName = command.split(" ")[1];
+						server.joinRoom(username, roomName);
+						location = server.getRooms().get(roomName);
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
 						server.vote(username, vote);
@@ -110,6 +120,20 @@ public class ServerThread extends Thread {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * @return the location
+	 */
+	public Room getLocation() {
+		return location;
+	}
+
+	/**
+	 * @param location the location to set
+	 */
+	public void setLocation(Room location) {
+		this.location = location;
 	}
 
 }

@@ -39,12 +39,33 @@ public class Room {
 	}
 
 	public String addUsers(String user) {
-		if (users.size() < maxSize) {
+		System.out.println("on entre dans le add");
+		if (users.size() == maxSize) {
+			
 			return "FULL";
 		}
 		this.users.add(user);
+		System.out.println(user+"added success");
 		return "UserAdded";
 
+	}
+	
+	/**
+	 * @return the host
+	 */
+	public String getHost() {
+		return host;
+	}
+
+	/**
+	 * @param host the host to set
+	 */
+	public void setHost(String host) {
+		this.host = host;
+	}
+
+	public Set<String> getUsers() {
+		return this.users;
 	}
 	
 
