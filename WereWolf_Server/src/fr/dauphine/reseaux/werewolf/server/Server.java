@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Map;
@@ -32,14 +33,22 @@ public class Server {
 	JTextArea displayWindow;
 	private ServerSocket serverSocket;
 	private Socket socket;
+
 	public Hashtable<Socket, ObjectOutputStream> outputStreams;
+
+	// contain all users connected to the server
 	public Hashtable<String, ObjectOutputStream> clients;
-	
+
+	// contain users in the roomSelection
+	public Set<String> roomSelection;
+	public Map<String, Room> rooms;
+
 	// Game state
 
 	private Map<String, Role> roleMap;
 	private Map<String, String> voteMap;
 	private Role roleTurn;
+
 	// constructor
 	public Server(int port) throws IOException {
 		// Simple Gui for Server
@@ -52,10 +61,11 @@ public class Server {
 
 		outputStreams = new Hashtable<Socket, ObjectOutputStream>();
 		clients = new Hashtable<String, ObjectOutputStream>();
+		roomSelection = new HashSet<>();
 
 		roleMap = new HashMap<>();
 		voteMap = new HashMap<>();
-		
+		rooms = new HashMap<>();
 		serverSocket = new ServerSocket(port);
 		showMessage("Waiting for clients at " + serverSocket);
 	}
@@ -89,6 +99,32 @@ public class Server {
 
 		clients.get(username).writeObject(roleMap.get(username));
 	}
+	
+	
+	/*
+	 *
+	 *
+	 *sending message methods
+	 *
+	 *
+	 */
+
+	/**
+	 * sending a message to all available clients in the selectionRoom
+	 * 
+	 * @param data
+	 * @throws IOException
+	 */
+	public void sendToSelectionRoom(Object data) throws IOException {
+		for (String userName : roomSelection) {
+			synchronized (roomSelection) {
+				ObjectOutputStream tempOutput = clients.get(userName);
+				tempOutput.writeObject(data);
+				tempOutput.flush();
+
+			}
+		}
+	}
 
 	// Sending a message to all the available clients
 	public void sendToAll(Object data) throws IOException {
@@ -100,6 +136,8 @@ public class Server {
 				ObjectOutputStream tempOutput = e.nextElement();
 				tempOutput.writeObject(data);
 				tempOutput.flush();
+				System.out.println("msg send" + data.toString());
+
 			}
 		}
 	}
@@ -154,50 +192,51 @@ public class Server {
 
 	// GAME METHODS
 
-	public void START_GAME() throws InterruptedException {
-		
-		boolean voyantePower=true;//gerer si la voyante a utilisé son pouvoir
-		boolean sorcierePower=true;//gerer si la voyante a utilisé ses pouvoirs
+	public void startGame() throws InterruptedException {
+
+		boolean voyantePower = true;// gerer si la voyante a utilisé son pouvoir
+		boolean sorcierePower = true;// gerer si la voyante a utilisé ses pouvoirs
 		try {
 			InitiateRole();
 			sendToAll("@Narrator;" + DEBUT_DU_JEU);
 			Thread.sleep(2000);
 
 			while (!gameFinished()) {
-				this.roleTurn=Role.LOUPGAROU;
+				this.roleTurn = Role.LOUPGAROU;
 
 				sendToAll("@Narrator;"
 						+ "Les loups-garous se réveillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
 				Thread.sleep(DUREE_TOUR);
 
 				String eliminatedPlayer = eliminatedPlayer();
-				
-				this.roleTurn=Role.SORCIER;
-				
+
+				this.roleTurn = Role.SORCIERE;
+
 				sendToAll("@Narrator;" + "La sorcière ce réveille");
-				//envoyer un MP pour lui dire qui est mort
-				
-				sendToAll("@Narrator;"+"désirez vous tuer quelqu'un ?");
-				// implémenter cette partie 
-				
-				Thread.sleep(1); //à changer quand on aura implémenté le machin
-				
-				sendToAll("@Narrator;"+"La sorciere retourne dormir");
-				
-				this.roleTurn=Role.VOYANT;
-				
+				// envoyer un MP pour lui dire qui est mort
+
+				sendToAll("@Narrator;" + "désirez vous tuer quelqu'un ?");
+				// implémenter cette partie
+
+				Thread.sleep(1); // à changer quand on aura implémenté le machin
+
+				sendToAll("@Narrator;" + "La sorciere retourne dormir");
+
+				this.roleTurn = Role.VOYANT;
+
 				sendToAll("@Narrator;" + "La Voyante se réveille");
-			
-				
+
 				sendToAll("@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
 				// à implémenter aussi
-				
+
 				Thread.sleep(1);
 				roleMap.remove(eliminatedPlayer);
-				sendToAll("@Narrator;" + "Le jour se lève: les vilageois se réveillent et découvrent avec effroi que" + eliminatedPlayer + " est mort :( !");
-				sendToAll("@Narrator;" + "De suite les villageois se concertent et décident de voter pour désigner un coupable ('/vote PSEUDO' pour voter contre la cible)");
+				sendToAll("@Narrator;" + "Le jour se lève: les vilageois se réveillent et découvrent avec effroi que"
+						+ eliminatedPlayer + " est mort :( !");
+				sendToAll("@Narrator;"
+						+ "De suite les villageois se concertent et décident de voter pour désigner un coupable ('/vote PSEUDO' pour voter contre la cible)");
 				Thread.sleep(DUREE_TOUR);
-				
+
 			}
 
 			if (winner().equals(Role.LOUPGAROU)) {
@@ -208,6 +247,38 @@ public class Server {
 		} catch (IOException e) {
 
 		}
+	}
+
+	/****
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 	
+	 *  */
+
+	// ROOM METHOD
+
+	/**
+	 * create a room
+	 * 
+	 * @param name
+	 * @param user
+	 * @param maxSize
+	 * @throws IOException
+	 */
+	public void createRoom(String name, String user, String maxSize) throws IOException {
+
+		this.rooms.put(name, new Room(name, user, Integer.parseInt(maxSize)));
+		System.out.println(rooms.keySet().toString());
+		sendToSelectionRoom("ROOM" + rooms.keySet().toString());
+
+	}
+
+	public void menu() throws InterruptedException {
+
 	}
 
 	private boolean gameFinished() {
@@ -289,7 +360,7 @@ public class Server {
 		for (String player : players) {
 			System.out.println(roles.getFirst());
 			roleMap.put(player, roles.removeFirst());
-			
+
 		}
 
 		// send to all player their role
@@ -332,6 +403,16 @@ public class Server {
 			}
 		}
 		return eliminated;
+	}
+
+	/**
+	 * Join the room entered in parameter
+	 * 
+	 * @param roomName
+	 */
+	public void joinRoom(String userName, String roomName) {
+		rooms.get(roomName).addUsers(userName);
+
 	}
 
 }

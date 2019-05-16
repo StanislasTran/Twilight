@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Map;
 
 public class ServerThread extends Thread {
 
@@ -26,6 +27,9 @@ public class ServerThread extends Thread {
 
 		server.clients.put(username, output);
 		server.outputStreams.put(socket, output);
+		
+		//add the player in selectionRoom
+		server.roomSelection.add(username);
 
 		server.sendToAll("!" + server.clients.keySet());
 
@@ -43,6 +47,7 @@ public class ServerThread extends Thread {
 			while (true) {
 				try {
 					message = input.readObject();
+					System.out.println(message);
 				} catch (Exception e) {
 					stop();
 				}
@@ -57,18 +62,30 @@ public class ServerThread extends Thread {
 							@Override
 							public void run() {
 								try {
-									server.START_GAME();
+									server.startGame();
 								} catch (InterruptedException e) {
 
 								}
 							}
 						}).start();
+
+					} else if (command.startsWith("/createRoom")) {
+
+						String roomName = command.split(" ")[1];
+						String maxSize = command.split(" ")[2];
+						
+						server.createRoom(roomName, username, maxSize);
+						System.out.println("room created");
+						
+					}else if (command.startsWith("/join")) {
+						String roomName=command.split(" ")[1];
+						server.joinRoom(username,roomName);
+						
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
 						server.vote(username, vote);
 					} else {
 						server.sendToAll(message);
-
 					}
 
 				} else {
@@ -78,7 +95,9 @@ public class ServerThread extends Thread {
 							formattedMsg);
 				}
 			}
-		} catch (IOException e) {
+		} catch (
+
+		IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 

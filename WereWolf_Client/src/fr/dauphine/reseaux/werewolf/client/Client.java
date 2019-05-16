@@ -79,7 +79,9 @@ public class Client {
 			// sending UserName
 			output = new ObjectOutputStream(SOCK.getOutputStream());
 			try {
+				
 				output.writeObject(userName);
+				System.out.println(userName);
 				output.flush();
 			} catch (IOException ioException) {
 				JOptionPane.showMessageDialog(null, "Error - UserName not Sent!");
