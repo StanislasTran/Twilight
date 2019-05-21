@@ -172,7 +172,7 @@ public class Server {
 
 				String eliminatedPlayer = eliminatedPlayer();
 				
-				this.roleTurn=Role.SORCIER;
+				this.roleTurn=Role.SORCIERE;
 				
 				sendToAll("@Narrator;" + "La sorcière ce réveille");
 				//envoyer un MP pour lui dire qui est mort
