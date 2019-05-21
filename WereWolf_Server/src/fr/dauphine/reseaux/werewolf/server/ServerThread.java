@@ -66,6 +66,9 @@ public class ServerThread extends Thread {
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
 						server.vote(username, vote);
+					} else if (command.startsWith("/witch")) {
+						String vote = command.split(" ")[1];
+						server.resultWitchSave(vote);
 					} else {
 						server.sendToAll(message);
 
