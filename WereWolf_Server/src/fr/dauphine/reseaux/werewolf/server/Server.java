@@ -107,7 +107,7 @@ public class Server {
 	}
 
 	// Sending a message to all the available clients
-	public void sendToAll(Object data) throws IOException {
+	public void sendToRoom(Object data) throws IOException {
 
 		for (Enumeration<ObjectOutputStream> e = getOutputStreams(); e.hasMoreElements();) {
 			// since we don't want server to remove one client and at the same time sending
@@ -139,7 +139,7 @@ public class Server {
 
 		synchronized (clients) {
 			clients.remove(username);
-			sendToAll("!" + clients.keySet());
+			sendToRoom("!" + clients.keySet());
 		}
 	}
 
@@ -178,14 +178,14 @@ public class Server {
 			playersDead = new LinkedList<>();
 			InitiateRole();
 			initiateListPlayerAlive();
-			sendToAll("@Narrator;" + DEBUT_DU_JEU);
+			sendToRoom("@Narrator;" + DEBUT_DU_JEU);
 			Thread.sleep(2000);
 
 			while (!gameFinished()) {
 				Map<String, Integer> playersVotedTurn = new HashMap<>();
 				this.roleTurn = Role.WOLF;
 
-				sendToAll("@Narrator;"
+				sendToRoom("@Narrator;"
 						+ "Les loups-garous se réveillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
 				Thread.sleep(DUREE_TOUR);
 
@@ -193,29 +193,29 @@ public class Server {
 
 				this.roleTurn = Role.WITCH;
 
-				sendToAll("@Narrator;" + "La sorcière se réveille");
+				sendToRoom("@Narrator;" + "La sorcière se réveille");
 				// envoyer un MP pour lui dire qui est mort
 				eliminatedPlayer = sendDeadPlayerToWitch();
 
-				sendToAll("@Narrator;" + "désirez vous tuer quelqu'un ?");
+				sendToRoom("@Narrator;" + "désirez vous tuer quelqu'un ?");
 				// implémenter cette partie
 
 				Thread.sleep(1); // à changer quand on aura implémenté le machin
 
-				sendToAll("@Narrator;" + "La sorciere retourne dormir");
+				sendToRoom("@Narrator;" + "La sorciere retourne dormir");
 
 				this.roleTurn = Role.SEER;
 
-				sendToAll("@Narrator;" + "La Voyante se réveille");
+				sendToRoom("@Narrator;" + "La Voyante se réveille");
 
-				sendToAll("@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
+				sendToRoom("@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
 				// à implémenter aussi
 
 				Thread.sleep(1);
 				roleMap.remove(eliminatedPlayer);
-				sendToAll("@Narrator;" + "Le jour se lève: les vilageois se réveillent et découvrent avec effroi que "
+				sendToRoom("@Narrator;" + "Le jour se lève: les vilageois se réveillent et découvrent avec effroi que "
 						+ eliminatedPlayer + " est mort :( !");
-				sendToAll("@Narrator;"
+				sendToRoom("@Narrator;"
 						+ "De suite les villageois se concertent et décident de voter pour désigner un coupable ('/vote PSEUDO' pour voter contre la cible)");
 				Thread.sleep(DUREE_TOUR);
 
@@ -226,9 +226,9 @@ public class Server {
 			}
 
 			if (winner().equals(Role.WOLF)) {
-				sendToAll("@Narrator;Les loups-garous ont gagné !");
+				sendToRoom("@Narrator;Les loups-garous ont gagné !");
 			} else {
-				sendToAll("@Narrator;Les villageois ont gagné !");
+				sendToRoom("@Narrator;Les villageois ont gagné !");
 			}
 		} catch (IOException e) {
 

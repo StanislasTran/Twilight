@@ -27,7 +27,7 @@ public class ServerThread extends Thread {
 		server.clients.put(username, output);
 		server.outputStreams.put(socket, output);
 
-		server.sendToAll("!" + server.clients.keySet());
+		server.sendToRoom("!" + server.clients.keySet());
 
 		server.showMessage("\n" + username + "(" + socket.getInetAddress().getHostAddress() + ") is online");
 		// starting the thread
@@ -70,7 +70,7 @@ public class ServerThread extends Thread {
 						String vote = command.split(" ")[1];
 						server.resultWitchSave(vote);
 					} else {
-						server.sendToAll(message);
+						server.sendToRoom(message);
 
 					}
 
