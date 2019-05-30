@@ -1,6 +1,5 @@
 package fr.dauphine.reseaux.werewolf.server.gameObjects;
 
 public enum Role {
-
-	LOUPGAROU, VILLAGEOIS,VOYANT,SORCIERE
+	WOLF, VILLAGER, SEER, WITCH,
 }

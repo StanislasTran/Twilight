@@ -95,7 +95,7 @@ public class ServerThread extends Thread {
 						String vote = command.split(" ")[1];
 						server.vote(username, vote);
 					} else {
-						server.sendToAll(message);
+						server.sendToRoom(location,message);
 					}
 
 				} else {

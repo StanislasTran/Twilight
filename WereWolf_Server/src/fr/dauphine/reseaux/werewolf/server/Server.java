@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -49,6 +50,16 @@ public class Server {
 	private Map<String, String> voteMap;
 	private Role roleTurn;
 
+
+	private boolean playerSaved = false;
+	private boolean seerPower = false; // seer = voyante
+	private boolean witchPower = false; // witch = sorciere
+
+	private ArrayList<String> playersAlive;
+	private LinkedList<String> playersDead;
+	// private ArrayList<String> playersDead;
+
+	
 	// constructor
 	public Server(int port) throws IOException {
 		// Simple Gui for Server
@@ -125,6 +136,12 @@ public class Server {
 		}
 	}
 
+	// Sending a message to all the available clients
+		public void adminSendsToPlayer(String username, String message) throws IOException {
+
+			clients.get(username).writeObject(message);
+		}
+		
 	/**
 	 * send the data to all user in the Room room
 	 * 
@@ -211,52 +228,68 @@ public class Server {
 
 	public void startGame(Room location) throws InterruptedException {
 		
-		boolean voyantePower = true;// gerer si la voyante a utilisé son pouvoir
-		boolean sorcierePower = true;// gerer si la voyante a utilisé ses pouvoirs
+		seerPower = true;// gerer si la voyante a utilisé son pouvoir
+		witchPower = true;// gerer si la voyante a utilisé ses pouvoirs
 		try {
+			playersDead = new LinkedList<>();
 			InitiateRole();
-			sendToAll("@Narrator;" + DEBUT_DU_JEU);
+			initiateListPlayerAlive();
+			sendToRoom(location,"@Narrator;" + DEBUT_DU_JEU);
 			Thread.sleep(2000);
 
+			boolean first_turn = true;
+			Map<String, Integer> playersVotedTurn = new HashMap<>();
+
 			while (!gameFinished()) {
-				this.roleTurn = Role.LOUPGAROU;
+				if(!first_turn) {
+					sendToRoom(location,"@Narrator;"
+							+ "De suite les villageois se concertent et décident de voter pour désigner un coupable ('/vote PSEUDO' pour voter contre la cible)");
+					Thread.sleep(DUREE_TOUR);
+
+				}
+				this.roleTurn = Role.WOLF;
 
 				sendToRoom(location,"@Narrator;"
-						+ "Les loups-garous se réveillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
+						+ "Les loups-garous se reveillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
 				Thread.sleep(DUREE_TOUR);
 
-				String eliminatedPlayer = eliminatedPlayer();
+				String eliminatedPlayer = eliminate(playersVotedTurn);
 
-				this.roleTurn = Role.SORCIERE;
 
-				sendToRoom(location,"@Narrator;" + "La sorcière ce réveille");
-				// envoyer un MP pour lui dire qui est mort
+				if(location.getUsers().size() > 3) {
+					this.roleTurn = Role.WITCH;
+					sendToRoom(location,"@Narrator;" + "La sorcière ce réveille");
+					// envoyer un MP pour lui dire qui est mort
+	
+					eliminatedPlayer = sendDeadPlayerToWitch();
 
-				sendToRoom(location,"@Narrator;" + "désirez vous tuer quelqu'un ?");
-				// implémenter cette partie
+					sendToRoom(location,"@Narrator;" + "La sorciere retourne dormir");
+				}
+				
+				if(location.getUsers().size() > 4) {
 
-				Thread.sleep(1); // à changer quand on aura implémenté le machin
-
-				sendToRoom(location,"@Narrator;" + "La sorciere retourne dormir");
-
-				this.roleTurn = Role.VOYANT;
-
-				sendToRoom(location,"@Narrator;" + "La Voyante se réveille");
-
-				sendToRoom(location,"@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
-				// à implémenter aussi
-
+					this.roleTurn = Role.SEER;
+	
+					sendToRoom(location,"@Narrator;" + "La Voyante se réveille");
+	
+					sendToRoom(location,"@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
+					// à implémenter aussi
+				}
+				
 				Thread.sleep(1);
 				roleMap.remove(eliminatedPlayer);
 				sendToRoom(location,"@Narrator;" + "Le jour se lève: les vilageois se réveillent et découvrent avec effroi que"
 						+ eliminatedPlayer + " est mort :( !");
-				sendToRoom(location,"@Narrator;"
-						+ "De suite les villageois se concertent et décident de voter pour désigner un coupable ('/vote PSEUDO' pour voter contre la cible)");
-				Thread.sleep(DUREE_TOUR);
+				
+				
+				System.out.println("Alive " + playersAlive);
+				System.out.println("Dead " + playersDead);
+				voteMap.clear();
 
 			}
 
-			if (winner().equals(Role.LOUPGAROU)) {
+			
+			if (winner().equals(Role.WOLF)) {
 				sendToRoom(location,"@Narrator;Les loups-garous ont gagné !");
 			} else {
 				sendToRoom(location,"@Narrator;Les villageois ont gagné !");
@@ -317,16 +350,16 @@ public class Server {
 		boolean villajoisWins = true;
 
 		for (Role role : roleMap.values()) {
-			if (role.equals(Role.VILLAGEOIS)) {
+			if (role.equals(Role.VILLAGER)) {
 				werewolfWins = false;
-			} else if (role.equals(Role.LOUPGAROU)) {
+			} else if (role.equals(Role.WOLF)) {
 				villajoisWins = false;
 			}
 		}
 		if (werewolfWins)
-			return Role.LOUPGAROU;
+			return Role.WOLF;
 		else if (villajoisWins)
-			return Role.VILLAGEOIS;
+			return Role.VILLAGER;
 		else
 			return null;
 	}
@@ -339,14 +372,14 @@ public class Server {
 
 		if (nbPlayer == 2) {
 
-			roles.add(Role.LOUPGAROU);
-			roles.add(Role.VILLAGEOIS);
+			roles.add(Role.WOLF);
+			roles.add(Role.VILLAGER);
 		}
 		if (nbPlayer == 3) {
 
-			roles.add(Role.LOUPGAROU);
-			roles.add(Role.VILLAGEOIS);
-			roles.add(Role.VILLAGEOIS);
+			roles.add(Role.WOLF);
+			roles.add(Role.VILLAGER);
+			roles.add(Role.VILLAGER);
 		}
 
 		if (nbPlayer >= 4 && nbPlayer < 7) {
@@ -354,12 +387,13 @@ public class Server {
 			int nbVillageois = nbPlayer - 3;
 
 			for (int i = 0; i < nbVillageois; i++) {
-				roles.add(Role.VILLAGEOIS);
+				roles.add(Role.VILLAGER);
 
 			}
-			roles.add(Role.LOUPGAROU);
-			roles.add(Role.SORCIERE);
-			roles.add(Role.VILLAGEOIS);
+			roles.add(Role.WOLF);
+			roles.add(Role.WITCH);
+			roles.add(Role.VILLAGER);
+
 
 		}
 
@@ -368,13 +402,13 @@ public class Server {
 			int nbVillageois = nbPlayer - 4;
 
 			for (int i = 0; i < nbVillageois; i++) {
-				roles.add(Role.VILLAGEOIS);
+				roles.add(Role.VILLAGER);
 
 			}
-			roles.add(Role.LOUPGAROU);
-			roles.add(Role.VILLAGEOIS);
-			roles.add(Role.SORCIERE);
-			roles.add(Role.VILLAGEOIS);
+			roles.add(Role.WOLF);
+			roles.add(Role.VILLAGER);
+			roles.add(Role.WITCH);
+			roles.add(Role.VILLAGER);
 
 		}
 
@@ -400,33 +434,78 @@ public class Server {
 		return roleMap.get(userName);
 	}
 
-	public void vote(String username, String vote) {
-		voteMap.put(username, vote);
+	public void vote(String usernameVoter, String playerVoted) throws IOException {
+		if (playersAlive.contains(playerVoted)) {
+			voteMap.put(usernameVoter, playerVoted);
+		} else {
+			sendPrivately(usernameVoter, "@Narrator;" + "Player already dead ! Choose another player.");
+		}
 
 	}
 
-	public String eliminatedPlayer() {
-		Map<String, Integer> vote = new HashMap<>();
+	public void initiateListPlayerAlive() {
+		playersAlive = new ArrayList<String>();
+		for (String player : roleMap.keySet()) {
+			playersAlive.add(player);
+		}
+	}
+	
+	public String eliminate(Map<String, Integer> playersVotedTurn) {
 
 		for (String name : voteMap.values()) {
-			if (vote.containsKey(name)) {
-				vote.put(name, vote.get(name) + 1);
+
+			if (playersVotedTurn.containsKey(name)) {
+				playersVotedTurn.put(name, playersVotedTurn.get(name) + 1);
 			} else {
-				vote.put(name, 1);
+				playersVotedTurn.put(name, 1);
 			}
+
 		}
 
 		int max = 0;
 		String eliminated = "";
 
-		for (String name : vote.keySet()) {
-			if (vote.get(name) > max) {
-				max = vote.get(name);
+		for (String name : playersVotedTurn.keySet()) {
+			if (playersVotedTurn.get(name) > max) {
+				max = playersVotedTurn.get(name);
 				eliminated = name;
 			}
 		}
+		playersDead.add(eliminated);
 		return eliminated;
 	}
+	public String sendDeadPlayerToWitch() throws IOException, InterruptedException {
+		String deadPlayer = "";
+		for (String player : roleMap.keySet()) {
+			if (roleMap.get(player).equals(Role.WITCH)) {
+				sendPrivately(player, "@Narrator;" + "This player is dead. Do you want to save someone ?");
+				sendPrivately(player, "@Narrator;" + playersDead.getLast());
+				Thread.sleep(DUREE_TOUR - 15000);
+				if (playerSaved) {
+					sendPrivately(player, "@Narrator;" + "Player saved");
+				} else {
+					sendPrivately(player, "@Narrator;" + "Player killed");
+					deadPlayer = playersDead.getLast();
+				}
+
+			}
+
+		}
+		return deadPlayer;
+
+	}
+	
+	public void resultWitchSave(String vote) {
+		playerSaved = false;
+		if (vote.equals("yes")) {
+			playersDead.remove(playersDead.getLast());
+			playerSaved = true;
+		} else if (vote.equals("no")) {
+			playersAlive.remove(playersDead.getLast());
+			playerSaved = false;
+		}
+	}
+
 
 	/**
 	 * Join the room entered in parameter
