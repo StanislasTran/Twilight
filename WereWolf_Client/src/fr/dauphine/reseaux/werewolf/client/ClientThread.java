@@ -43,6 +43,7 @@ public class ClientThread implements Runnable {
 			String message = "";
 			try {
 				message = (String) in.readObject();
+				System.out.println(message+" received");
 			} catch (ClassNotFoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -50,14 +51,16 @@ public class ClientThread implements Runnable {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-
-			if (message.startsWith("!")) {
-				String temp1 = message.substring(1);
+			
+			if (message.startsWith("ROOM")) {
+				System.out.println(message);
+				String temp1 = message.substring(4);
 				temp1 = temp1.replace("[", "");
 				temp1 = temp1.replace("]", "");
 
 				currentUsers = temp1.split(", ");
-				Arrays.sort(currentUsers);
+				System.out.println(currentUsers[0]);
+				//Arrays.sort(currentUsers);
 
 				try {
 
@@ -65,6 +68,33 @@ public class ClientThread implements Runnable {
 						@Override
 						public void run() {
 							Client.userOnlineList.setListData(currentUsers);
+							System.out.println(currentUsers[0]+"3");
+
+						}
+					});
+				} catch (Exception e) {
+					JOptionPane.showMessageDialog(null, "Unable to set Online list data");
+				}
+			}
+
+			if (message.startsWith("!")) {
+				System.out.println(message);
+				String temp1 = message.substring(1);
+				temp1 = temp1.replace("[", "");
+				temp1 = temp1.replace("]", "");
+
+				currentUsers = temp1.split(", ");
+				System.out.println(currentUsers[0]);
+				//Arrays.sort(currentUsers);
+
+				try {
+
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							Client.userOnlineList.setListData(currentUsers);
+							System.out.println(currentUsers[0]+"3");
+
 						}
 					});
 				} catch (Exception e) {
