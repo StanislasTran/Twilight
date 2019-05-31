@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Map;
 
 public class ServerThread extends Thread {
 
@@ -94,8 +93,15 @@ public class ServerThread extends Thread {
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
 						server.vote(username, vote);
+					} else if (command.startsWith("/witch_save")) {
+						String vote = command.split(" ")[1];
+						server.resultWitchSave(vote);
+					} else if (command.startsWith("/witch_kill")) {
+						String vote = command.split(" ")[1];
+						String playername = command.split(" ")[2];
+						server.resultWitchKill(vote, playername);
 					} else {
-						server.sendToRoom(location,message);
+						server.sendToRoom(location, message);
 					}
 
 				} else {
@@ -130,7 +136,8 @@ public class ServerThread extends Thread {
 	}
 
 	/**
-	 * @param location the location to set
+	 * @param location
+	 *            the location to set
 	 */
 	public void setLocation(Room location) {
 		this.location = location;
