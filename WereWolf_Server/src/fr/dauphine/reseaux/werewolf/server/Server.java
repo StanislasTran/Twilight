@@ -516,6 +516,7 @@ public class Server {
 						+ "You still have your killing power. Do you kill to save someone ? (Write yes or no, if yes, write the player name after a space");
 				Thread.sleep(DUREE_TOUR - 15000);
 				if (!playerWitchToKill.isEmpty() && playersAlive.contains(playerWitchToKill)) {
+					playersAlive.remove(playerWitchToKill);
 					sendPrivately(player, "@Narrator;" + "Player killed");
 				} else {
 					sendPrivately(player, "@Narrator;" + "Player isn't alive");
@@ -528,7 +529,6 @@ public class Server {
 	public void resultWitchKill(String vote, String playername) {
 		if (vote.equals("yes")) {
 			playerWitchToKill = playername;
-			playersAlive.remove(playerWitchToKill);
 			witchKillPower = false;
 		} else if (vote.equals("no")) {
 		}
