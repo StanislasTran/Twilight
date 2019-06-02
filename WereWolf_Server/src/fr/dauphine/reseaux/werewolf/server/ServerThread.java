@@ -97,7 +97,8 @@ public class ServerThread extends Thread {
 						if (command.split(" ") != null && command.split(" ").length > 1) {
 
 							String vote = command.split(" ")[1];
-							server.resultWitchSave(location, vote);
+							server.resultWitchSave(location, username, vote);
+
 						}
 					} else if (command.startsWith("/witch_kill")) {
 						if (command.split(" ") != null && command.split(" ").length > 1) {

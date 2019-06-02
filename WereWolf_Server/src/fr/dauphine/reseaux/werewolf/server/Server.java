@@ -524,12 +524,14 @@ public class Server {
 
 	}
 
-	public void resultWitchSave(Room room, String vote) {
+	public void resultWitchSave(Room room, String witchName, String vote) throws IOException {
 		room.setPlayerSaved(false);
 		if (vote.equals("yes")) {
 			room.setPlayerSaved(true);
+			sendPrivately(witchName, "@Narrator;Vous avez decide de sauver le joueur tue par les loups !");
 		} else if (vote.equals("no")) {
 			room.setPlayerSaved(false);
+			sendPrivately(witchName, "@Narrator;Vous avez decide de ne pas sauver le joueur tue par les loups !");
 		}
 	}
 
@@ -565,6 +567,7 @@ public class Server {
 		if (room.getPlayersAlive().contains(playername)) {
 			room.setPlayerWitchToKill(playername);
 			room.setWitchKillPower(false);
+			sendPrivately(witchUserName, "@Narrator;" + "Vous decidez de tuer " + playername + ".");
 		} else if (room.getPlayersDead().contains(playername)) {
 			sendPrivately(witchUserName, "@Narrator;" + "Player " + playername + " isn't alive, you cannot kill him.");
 		} else {
