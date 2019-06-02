@@ -17,10 +17,12 @@
 2. Use **run.bat** to start multiple Clients, modify the batch depending the number of clients you need.
 
 ##Commands
+
 * '/start' to start the game
 * '/vote NOM' to vote during the night for werewolves
 
 ##Team Members
+
 *Louis FONTAINE*  
 *Stanislas TRAN*    
 *Victor CHEN*
