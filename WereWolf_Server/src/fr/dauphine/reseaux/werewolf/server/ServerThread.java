@@ -50,9 +50,8 @@ public class ServerThread extends Thread {
 			while (true) {
 				try {
 					message = input.readObject();
-					System.out.println(message);
 				} catch (Exception e) {
-					stop();
+					e.printStackTrace();
 				}
 				if (message.toString().contains("@EE@")) {
 					String[] tabMsg = message.toString().split(";");
@@ -60,7 +59,7 @@ public class ServerThread extends Thread {
 					String command = tabMsg[2];
 
 					if (command.startsWith("/start")) {
-						if (location.getHost() != this.username) {
+						if (location == null || location.getHost() != this.username) {
 							System.out.println("your not the host");
 							// mettre ca sur le chat
 						} else {
@@ -92,14 +91,14 @@ public class ServerThread extends Thread {
 						location = server.getRooms().get(roomName);
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
-						server.vote(username, vote);
+						server.vote(location.getName(),username, vote);
 					} else if (command.startsWith("/witch_save")) {
 						String vote = command.split(" ")[1];
-						server.resultWitchSave(vote);
+						server.resultWitchSave(location.getName(),vote);
 					} else if (command.startsWith("/witch_kill")) {
 						String vote = command.split(" ")[1];
 						String playername = command.split(" ")[2];
-						server.resultWitchKill(vote, playername);
+						server.resultWitchKill(location.getName(),vote, playername);
 					} else {
 						if(server.getRoomSelection().contains(username)) {
 							server.sendToSelectionRoom(message);
