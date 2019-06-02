@@ -43,38 +43,10 @@ public class Server {
 	// contain users in the roomSelection
 	public Set<String> roomSelection;
 	/**
-	 * Mapping between room name and Room (list of users in the room)
+	 * Mapping between room name and Room (list of users in the room and all game
+	 * objects)
 	 */
 	private Map<String, Room> rooms;
-
-	// Game state
-
-	/**
-	 * Mapping between room name and the role per player in this room (represented with a map)
-	 */
-	private Map<String,Map<String, Role>> roleMap;
-	/**
-	 * Mapping between room name and the vote per player in this room (represented with a map)
-	 */
-	private Map<String, Map<String, String>> voteMap;
-	/**
-	 * Mapping between room name and the role which is playing in this room
-	 */
-	private Map<String,Role> roleTurn;
-
-	private Map<String,Boolean> playerSaved = new HashMap<>();
-	private Map<String,Boolean> seerPower = new HashMap<>(); // seer = voyante ; // gerer si la voyante a utilisé son pouvoir
-	private Map<String,Boolean> witchPower = new HashMap<>(); // witch = sorciere ; // gerer si la sorcière a utilisé son pouvoir
-
-	private Map<String,Boolean> witchSavePower = new HashMap<>();
-	private Map<String,Boolean> witchKillPower = new HashMap<>();
-	/**
-	 * Mapping between room name and the player the witch want to kill
-	 */
-	private Map<String,String> playerWitchToKill = new HashMap<>();
-
-	private Map<String,ArrayList<String>> playersAlive = new HashMap<>();
-	private Map<String,LinkedList<String>> playersDead = new HashMap<>();
 
 	// constructor
 	public Server(int port) throws IOException {
@@ -90,8 +62,6 @@ public class Server {
 		clients = new Hashtable<>();
 		roomSelection = new HashSet<>();
 
-		roleMap = new HashMap<>();
-		voteMap = new HashMap<>();
 		rooms = new HashMap<>();
 		serverSocket = new ServerSocket(port);
 		showMessage("Waiting for clients at " + serverSocket);
@@ -120,20 +90,6 @@ public class Server {
 
 		});
 	}
-
-	// Sending a message to all the available clients
-	public void sendTo(String username) throws IOException {
-
-		clients.get(username).writeObject(roleMap.get(username));
-	}
-
-	/*
-	 *
-	 *
-	 * sending message methods
-	 *
-	 *
-	 */
 
 	/**
 	 * sending a message to all available clients in the selectionRoom
@@ -200,13 +156,10 @@ public class Server {
 	// Sending private message
 	public void sendPrivately(String username, String message) throws IOException {
 		// TODO Auto-generated method stub
-		try(ObjectOutputStream tempOutput = clients.get(username)) {
-			tempOutput.writeObject(message);
-			tempOutput.flush();
-			
-			tempOutput.close();
-		}
-		
+		ObjectOutputStream tempOutput = clients.get(username);
+		tempOutput.writeObject(message);
+		tempOutput.flush();
+
 	}
 
 	// Removing the client from the client hash table
@@ -233,8 +186,7 @@ public class Server {
 	}
 
 	/**
-	 * @param location
-	 *            ******************
+	 * @param location ******************
 	 * 
 	 * 
 	 * 
@@ -249,77 +201,110 @@ public class Server {
 
 	public void startGame(Room location) throws InterruptedException {
 
-		String roomName = location.getName();
-		
-		seerPower.put(location.getName(), true);
-		witchPower.put(location.getName(), true); 
+		location.setSeerPower(true);
+		location.setWitchPower(true);
 		try {
-			playersDead.put(roomName, new LinkedList<String>());
-			
-			InitiateRole(roomName);
-			initiateListPlayerAlive(roomName);
-			
-			sendToRoom(location, "@Narrator;" + DEBUT_DU_JEU);
-			
-			Thread.sleep(2000);
+			location.setPlayersDead(new LinkedList<String>());
 
-			Map<String, Integer> playersVotedTurn = new HashMap<>();
+			InitiateRole(location);
+			initiateListPlayerAlive(location);
+
+			sendToRoom(location, "@Narrator;" + DEBUT_DU_JEU);
+
+			Thread.sleep(2000);
 
 			boolean first_turn = true;
 
-			while (!gameFinished(roomName)) {
+			while (!gameFinished(location)) {
 				if (!first_turn) {
 					sendToRoom(location, "@Narrator;"
 							+ "De suite les villageois se concertent et decident de voter pour dÃ©signer un coupable ('/vote PSEUDO' pour voter contre la cible)");
-					Thread.sleep(DUREE_TOUR);
+					// Thread.sleep(DUREE_TOUR);
 
+					// TODO
 				}
-				
-				roleTurn.put(roomName, Role.WOLF);
+				first_turn = false;
+
+				location.setRoleTurn(Role.WOLF);
 
 				sendToRoom(location, "@Narrator;"
 						+ "Les loups-garous se reveillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
-				
+
 				Thread.sleep(DUREE_TOUR);
 
-				String eliminatedPlayer = eliminate(roomName,playersVotedTurn);
+				String eliminatedPlayerWolf = eliminate(location);
+				String eliminatedPlayerWitch = "Nobody";
 
+				if (location.getUsers().size() <= 3) {
+					if (!"Nobody".equals(eliminatedPlayerWolf)) {
+						location.getRoleMap().remove(eliminatedPlayerWolf);
+					}
+				}
 				if (location.getUsers().size() > 3) {
-					roleTurn.put(roomName, Role.WITCH);
-					sendToRoom(location, "@Narrator;" + "La sorciere se reveille");
-					
-					//Envoie un MP pour lui dire qui est mort
-					eliminatedPlayer = sendDeadPlayerToWitch(roomName);
+					location.setRoleTurn(Role.WITCH);
+					if (witch_Alive(location)) {
+						sendToRoom(location, "@Narrator;" + "La sorciere se reveille");
 
-					witchKillManagement(roomName);
+						// Envoie un MP pour lui dire qui est mort;le joueur est rajouté à la liste des
+						// alives s'il est ressuscité
+						if (!"Nobody".equals(eliminatedPlayerWolf)) {
+							eliminatedPlayerWolf = sendDeadPlayerToWitch(location);
+						}
+						if (!gameFinished(location)) {
+							eliminatedPlayerWitch = witchKillManagement(location);
+						}
 
-					sendToRoom(location, "@Narrator;" + "La sorciere retourne dormir");
+						sendToRoom(location, "@Narrator;" + "La sorciere retourne dormir");
+					} else {
+						sendToRoom(location,
+								"@Narrator;" + "La sorciere n'est plus de ce monde, elle ne se reveille donc pas.");
+						if (!"Nobody".equals(eliminatedPlayerWolf)) {
+							location.getRoleMap().remove(eliminatedPlayerWolf);
+						}
+					}
 				}
 
 				if (location.getUsers().size() > 4) {
 
-					roleTurn.put(roomName, Role.SEER);
+					location.setRoleTurn(Role.SEER);
 
 					sendToRoom(location, "@Narrator;" + "La Voyante se reveille");
 					sendToRoom(location, "@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
-					//TODO VOYANTE à implementer
-					
+
+					// TODO VOYANTE à implementer
+
 				}
 
 				Thread.sleep(1);
-				
-				roleMap.remove(eliminatedPlayer);
-				sendToRoom(location,
-						"@Narrator;" + "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
-								+ eliminatedPlayer + " est mort... !");
 
-				System.out.println("Alive " + playersAlive);
-				System.out.println("Dead " + playersDead);
-				voteMap.clear();
+				// SEND MESSAGE DEAD PERSON TO VILLAGE
+				if (!"Nobody".equals(eliminatedPlayerWolf) && !"Nobody".equals(eliminatedPlayerWitch)) {
+					sendToRoom(location,
+							"@Narrator;"
+									+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
+									+ eliminatedPlayerWolf + " et " + eliminatedPlayerWitch + " sont morts ... !");
+				} else if ("Nobody".equals(eliminatedPlayerWolf) && "Nobody".equals(eliminatedPlayerWitch)) {
+					sendToRoom(location, "@Narrator;"
+							+ "Le jour se leve: les villageois se reveillent et decouvrent avec bonheur que personne n'est mort !");
+				} else if (!"Nobody".equals(eliminatedPlayerWolf)) {
+					sendToRoom(location,
+							"@Narrator;"
+									+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
+									+ eliminatedPlayerWolf + " est mort... !");
+				} else if ("Nobody".equals(eliminatedPlayerWitch)) {
+					sendToRoom(location,
+							"@Narrator;"
+									+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
+									+ eliminatedPlayerWitch + " est mort... !");
+				}
+
+				System.out.println("Alive " + location.getPlayersAlive());
+				System.out.println("Dead " + location.getPlayersDead());
+				location.getVoteMap().clear();
 
 			}
 
-			if (winner(roomName).equals(Role.WOLF)) {
+			if (winner(location).equals(Role.WOLF)) {
 				sendToRoom(location, "@Narrator;Les loups-garous ont gagne !");
 			} else {
 				sendToRoom(location, "@Narrator;Les villageois ont gagne ! Vive le village de Thiercelieux");
@@ -329,6 +314,14 @@ public class Server {
 		}
 	}
 
+	private boolean witch_Alive(Room room) {
+		for (String player : room.getPlayersAlive()) {
+			if (Role.WITCH.equals(room.getRoleMap().get(player))) {
+				return true;
+			}
+		}
+		return false;
+	}
 	/****
 	 * 
 	 * 
@@ -362,25 +355,24 @@ public class Server {
 
 	}
 
-	public void menu()  {
-		//nothing
+	public void menu() {
+		// nothing
 	}
 
-	private boolean gameFinished(String roomName) {
+	private boolean gameFinished(Room roomName) {
 		Role winner = winner(roomName);
 		if (winner == null) {
 			return false;
 		}
-			return true;
+		return true;
 	}
-	
 
-	private Role winner(String roomName) {
+	private Role winner(Room room) {
 		boolean werewolfWins = true;
 		boolean villajoisWins = true;
 
-		for (Role role : roleMap.get(roomName).values()) {
-			if (role.equals(Role.VILLAGER)) {
+		for (Role role : room.getRoleMap().values()) {
+			if (!role.equals(Role.WOLF)) {
 				werewolfWins = false;
 			} else if (role.equals(Role.WOLF)) {
 				villajoisWins = false;
@@ -394,12 +386,15 @@ public class Server {
 			return null;
 	}
 
-	private void InitiateRole(String roomName) throws IOException {
-		int nbPlayer = clients.size();
-		Set<String> players = clients.keySet();
+	private void InitiateRole(Room room) throws IOException {
+		int nbPlayer = room.getUsers().size();
+		Set<String> players = room.getUsers();
 
 		LinkedList<Role> roles = new LinkedList<>();
 
+		if (nbPlayer == 1) {
+			roles.add(Role.WOLF);
+		}
 		if (nbPlayer == 2) {
 
 			roles.add(Role.WOLF);
@@ -442,47 +437,40 @@ public class Server {
 		}
 
 		Collections.sort(roles);
+		room.setRoleMap(new HashMap<String, Role>());
 
 		for (String player : players) {
-			roleMap.put(roomName, new HashMap<String,Role>());
-			addRole(roomName,player,roles.getFirst());
+			room.getRoleMap().put(player, roles.removeFirst());
 		}
 
 		// send to all player their role
-		for (String player : clients.keySet()) {
-			sendPrivately(player, "@Role;" + roleMap.get(player).toString());
+		for (String player : room.getUsers()) {
+			sendPrivately(player, "@Role;" + room.getRoleMap().get(player).toString());
 		}
 	}
 
-	public void addRole(String roomName, String userName, Role role) {
-		roleMap.get(roomName).put(userName, role);
-	}
-
-	public Role getRole(String roomName, String userName) {
-		return roleMap.get(roomName).get(userName);
-	}
-
-	public void vote(String roomName, String usernameVoter, String playerVoted) throws IOException {
-		if (playersAlive.get(roomName).contains(playerVoted)) {
-			voteMap.get(roomName).put(usernameVoter, playerVoted);
+	public void vote(Room room, String usernameVoter, String playerVoted) throws IOException {
+		if (room.getPlayersAlive().contains(playerVoted)) {
+			room.getVoteMap().put(usernameVoter, playerVoted);
+			sendPrivately(usernameVoter, "@Narrator;Vous avez voté " + playerVoted);
 		} else {
-			sendPrivately(usernameVoter, "@Narrator;" + "Player already dead ! Choose another player.");
+			sendPrivately(usernameVoter, "@Narrator;" + "Le joueur est déjà mort, choisissez un autre !");
 		}
 
 	}
 
-	public void initiateListPlayerAlive(String roomName) {
-		playersAlive = new HashMap<>();
+	public void initiateListPlayerAlive(Room room) {
+		room.setPlayersAlive(new ArrayList<String>());
 
-		for (String player : roleMap.keySet()) {
-			playersAlive.put(roomName, new ArrayList<String>());
-			playersAlive.get(roomName).add(player);
+		for (String player : room.getRoleMap().keySet()) {
+			room.getPlayersAlive().add(player);
 		}
 	}
 
-	public String eliminate(String roomName, Map<String, Integer> playersVotedTurn) {
+	public String eliminate(Room room) {
+		Map<String, Integer> playersVotedTurn = new HashMap<>();
 
-		for (String name : voteMap.get(roomName).values()) {
+		for (String name : room.getVoteMap().values()) {
 
 			if (playersVotedTurn.containsKey(name)) {
 				playersVotedTurn.put(name, playersVotedTurn.get(name) + 1);
@@ -493,7 +481,7 @@ public class Server {
 		}
 
 		int max = 0;
-		String eliminated = "";
+		String eliminated = "Nobody";
 
 		for (String name : playersVotedTurn.keySet()) {
 			if (playersVotedTurn.get(name) > max) {
@@ -501,67 +489,89 @@ public class Server {
 				eliminated = name;
 			}
 		}
-		playersDead.get(roomName).add(eliminated);
+		if (!"Nobody".equals(eliminated)) {
+			room.getPlayersAlive().remove(eliminated);
+			room.getPlayersDead().addLast(eliminated);
+		}
+
 		return eliminated;
 	}
 
-	public String sendDeadPlayerToWitch(String roomName) throws IOException, InterruptedException {
-		String deadPlayer = "";
-		for (String player : roleMap.keySet()) {
-			if (roleMap.get(roomName).get(player).equals(Role.WITCH) && witchSavePower.get(roomName)) {
-				sendPrivately(player, "@Narrator;" + "This player is dead. Do you want to save someone ?");
-				sendPrivately(player, "@Narrator;" + playersDead.get(roomName).getLast());
-				Thread.sleep(DUREE_TOUR - 15000);
-				if (playerSaved.get(roomName)) {
-					sendPrivately(player, "@Narrator;" + "Player saved");
+	public String sendDeadPlayerToWitch(Room room) throws IOException, InterruptedException {
+		String eliminated = room.getPlayersDead().getLast();
+		for (String player : room.getRoleMap().keySet()) {
+			if (room.getRoleMap().get(player).equals(Role.WITCH) && room.getWitchSavePower()) {
+				sendPrivately(player,
+						"@Narrator;" + "This player is dead. Do you want to save him ? (/witch_save ${yes or no}");
+				sendPrivately(player, "@Narrator;" + room.getPlayersDead().getLast());
+				Thread.sleep(DUREE_TOUR - 0);
+				if (room.getPlayerSaved()) {
+					sendPrivately(player, "@Narrator;" + "Player " + room.getPlayersDead().getLast() + " is saved");
+					room.setWitchSavePower(false);
+					room.getPlayersAlive().add(room.getPlayersDead().getLast());
+					room.getPlayersDead().removeLast();
+					eliminated = "Nobody";
+					room.setPlayerSaved(false);
 				} else {
-					sendPrivately(player, "@Narrator;" + "Player killed");
-					deadPlayer = playersDead.get(roomName).getLast();
+					sendPrivately(player, "@Narrator;" + "Player is dead");
+					room.getRoleMap().remove(room.getPlayersDead().getLast());
 				}
 
 			}
 
 		}
-		return deadPlayer;
+		return eliminated;
 
 	}
 
-	public void resultWitchSave(String roomName, String vote) {
-		playerSaved.put(roomName, false);
+	public void resultWitchSave(Room room, String vote) {
+		room.setPlayerSaved(false);
 		if (vote.equals("yes")) {
-			playersDead.remove(playersDead.get(roomName).getLast());
-			playerSaved.put(roomName, true);
-			witchSavePower.put(roomName, false);
+			room.setPlayerSaved(true);
 		} else if (vote.equals("no")) {
-			playersAlive.remove(playersDead.get(roomName).getLast());
-			playerSaved.put(roomName, false) ;
+			room.setPlayerSaved(false);
 		}
 	}
 
-	public void witchKillManagement(String roomName) throws IOException, InterruptedException {
-		for (String player : roleMap.keySet()) {
-			if (roleMap.get(roomName).get(player).equals(Role.WITCH) && witchKillPower.get(roomName)) {
+	public String witchKillManagement(Room room) throws IOException, InterruptedException {
+		for (String player : room.getRoleMap().keySet()) {
+			if (room.getRoleMap().get(player).equals(Role.WITCH) && room.getWitchKillPower()) {
 				sendPrivately(player, "@Narrator;"
-						+ "You still have your killing power. Do you kill to save someone ? (Write yes or no, if yes, write the player name after a space");
-				Thread.sleep(DUREE_TOUR - 15000);
-				if (!playerWitchToKill.isEmpty() && playersAlive.get(roomName).contains(playerWitchToKill.get(roomName))) {
-					playersAlive.remove(playerWitchToKill.get(roomName));
-					sendPrivately(player, "@Narrator;" + "Player killed");
-				} else {
-					sendPrivately(player, "@Narrator;" + "Player isn't alive");
+						+ "You still have your killing power. Do you kill to save someone ? (To kill someone, write /witch_kill ${the player name you want to kill}. Else, just wait.  ");
+
+				Thread.sleep(DUREE_TOUR - 0);
+
+				String toKill = room.getPlayerWitchToKill();
+				if (!toKill.isEmpty() && room.getPlayersAlive().contains(toKill)) {
+					room.getPlayersAlive().remove(toKill);
+					room.getPlayersDead().add(toKill);
+					room.getRoleMap().remove(toKill);
+					sendPrivately(player, "@Narrator;" + "Player " + toKill + " killed");
+
+					room.setPlayerWitchToKill("");
+
+					return toKill;
 				}
+
+				return "Nobody";
 
 			}
 		}
+		return "Nobody";
+
 	}
 
-	public void resultWitchKill(String roomName,String vote, String playername) {
-		if (vote.equals("yes")) {
-			playerWitchToKill.put(roomName, playername);
-			witchKillPower.put(roomName, false);
-		} else if (vote.equals("no")) {
-			//nothing
+	public void resultWitchKill(Room room, String witchUserName, String playername) throws IOException {
+		if (room.getPlayersAlive().contains(playername)) {
+			room.setPlayerWitchToKill(playername);
+			room.setWitchKillPower(false);
+		} else if (room.getPlayersDead().contains(playername)) {
+			sendPrivately(witchUserName, "@Narrator;" + "Player " + playername + " isn't alive, you cannot kill him.");
+		} else {
+			sendPrivately(witchUserName,
+					"@Narrator;" + "Player " + playername + " doesn't exist, you cannot kill him.");
 		}
+
 	}
 
 	/**
@@ -570,7 +580,7 @@ public class Server {
 	 * @param roomName
 	 * @throws IOException
 	 */
-	public void joinRoom(String roomName,String userName) throws IOException {
+	public void joinRoom(String roomName, String userName) throws IOException {
 		rooms.get(roomName).addUsers(userName);
 		roomSelection.remove(userName);
 		sendToRoom(rooms.get(roomName), rooms.get(roomName).userKey());
@@ -591,16 +601,14 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection
-	 *            the roomSelection to set
+	 * @param roomSelection the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms
-	 *            the rooms to set
+	 * @param rooms the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;

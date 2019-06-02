@@ -87,23 +87,28 @@ public class ServerThread extends Thread {
 
 					} else if (command.startsWith("/join")) {
 						String roomName = command.split(" ")[1];
-						server.joinRoom(username, roomName);
+						server.joinRoom(roomName, username);
 						location = server.getRooms().get(roomName);
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
-						server.vote(location.getName(),username, vote);
+						server.vote(location, username, vote);
 					} else if (command.startsWith("/witch_save")) {
-						String vote = command.split(" ")[1];
-						server.resultWitchSave(location.getName(),vote);
+
+						if (command.split(" ") != null && command.split(" ").length > 1) {
+
+							String vote = command.split(" ")[1];
+							server.resultWitchSave(location, vote);
+						}
 					} else if (command.startsWith("/witch_kill")) {
-						String vote = command.split(" ")[1];
-						String playername = command.split(" ")[2];
-						server.resultWitchKill(location.getName(),vote, playername);
+						if (command.split(" ") != null && command.split(" ").length > 1) {
+							String playername = command.split(" ")[1];
+							server.resultWitchKill(location, username, playername);
+						}
 					} else {
-						if(server.getRoomSelection().contains(username)) {
+						if (server.getRoomSelection().contains(username)) {
 							server.sendToSelectionRoom(message);
 
-						} else if(location.getUsers().contains(username)) {
+						} else if (location.getUsers().contains(username)) {
 							server.sendToRoom(location, message);
 						}
 					}
@@ -140,8 +145,7 @@ public class ServerThread extends Thread {
 	}
 
 	/**
-	 * @param location
-	 *            the location to set
+	 * @param location the location to set
 	 */
 	public void setLocation(Room location) {
 		this.location = location;

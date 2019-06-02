@@ -1,4 +1,5 @@
 ﻿package fr.dauphine.reseaux.werewolf.client;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -33,9 +34,9 @@ import javax.swing.border.TitledBorder;
 
 public class Client {
 
-	//TESTS
+	// TESTS
 	private final static boolean TEST = true;
-	
+
 	// Globals
 	private static ClientThread clientThread;
 	public static String userName = "Anonymous";
@@ -67,10 +68,14 @@ public class Client {
 
 	// GUI Globals - Login Window
 	public static JFrame logInWindow = new JFrame();
+	public static JFrame popUpWindow = new JFrame();
 	public static JPanel logInWindowGui = new JPanel();
+	public static JPanel popUpWindowGui = new JPanel();
 	public static JLabel logInEnterUsername = new JLabel("Enter Username: ");
 	public static JTextField logInUsernameBox = new JTextField(20);
 	public static JButton logInEnter = new JButton("Enter");
+	public static JLabel popUpText = new JLabel("");
+	public static JButton popUpEnter = new JButton("Back");
 
 	public static void Connect() {
 
@@ -83,7 +88,7 @@ public class Client {
 			// sending UserName
 			output = new ObjectOutputStream(SOCK.getOutputStream());
 			try {
-				
+
 				output.writeObject(userName);
 				System.out.println(userName);
 				output.flush();
@@ -273,9 +278,14 @@ public class Client {
 
 	public static void SUBMIT_ACTION() throws IOException {
 		if (!typeText.getText().equals("")) {
-			clientThread.SEND(typeText.getText());
-			typeText.requestFocus();
-			typeText.setText("");
+			String[] test = typeText.getText().split(" ");
+			if (typeText.getText().contains("/createRoom") && typeText.getText().split(" ").length > 3) {
+				BuildPopUpWindow("Room name cannot contain spaces !");
+			} else {
+				clientThread.SEND(typeText.getText());
+				typeText.requestFocus();
+				typeText.setText("");
+			}
 		}
 	}
 
@@ -290,14 +300,13 @@ public class Client {
 
 		ConfigureLogInWindow();
 		LogInWindow_Action();
-		
-		if(TEST) {
+
+		if (TEST) {
 			Random rand = new Random();
-			
-			logInUsernameBox.setText("Client " + rand.nextInt(100000));
+
+			logInUsernameBox.setText("Client_" + rand.nextInt(100000));
 			LOGIN_ACTION();
-		}
-		else {
+		} else {
 			logInWindow.setVisible(true);
 		}
 	}
@@ -339,7 +348,7 @@ public class Client {
 	}
 
 	public static void LOGIN_ACTION() {
-		if (!logInUsernameBox.getText().equals("")) {
+		if (!logInUsernameBox.getText().equals("") && !logInUsernameBox.getText().contains(" ")) {
 			userName = logInUsernameBox.getText().trim();
 			mainWindow.setTitle("ChatRoom - " + userName);
 			logInWindow.dispose();
@@ -348,8 +357,49 @@ public class Client {
 			typeText.requestFocus();
 			Connect();
 		} else {
-			JOptionPane.showMessageDialog(null, "Please Enter a name!");
+			JOptionPane.showMessageDialog(null, "Please Enter a name (without spaces)!");
 		}
+	}
+
+	public static void BuildPopUpWindow(String text) {
+
+		popUpWindow.setTitle("Information");
+		popUpText.setText(text);
+
+		ConfigurePopUpWindow();
+		PopUpWindow_Action();
+
+		popUpWindow.setVisible(true);
+
+	}
+
+	public static void ConfigurePopUpWindow() {
+		popUpWindow.setContentPane(popUpWindowGui);
+		popUpWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		popUpWindow.setMinimumSize(new Dimension(370, 90));
+		popUpWindow.pack();
+		popUpWindow.setLocationRelativeTo(null);
+		try {
+			// 1.6+
+			popUpWindow.setLocationByPlatform(true);
+			popUpWindow.setMinimumSize(popUpWindow.getSize());
+		} catch (Throwable ignoreAndContinue) {
+		}
+
+		popUpWindowGui.setLayout(new FlowLayout());
+		popUpWindowGui.add(popUpText);
+		popUpWindowGui.add(popUpEnter);
+	}
+
+	public static void PopUpWindow_Action() {
+		popUpEnter.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				popUpWindow.dispose();
+			}
+
+		});
+
 	}
 
 }
