@@ -78,7 +78,7 @@ public class ClientThread implements Runnable {
 			}
 
 			if (message.startsWith("!")) {
-				System.out.println(message);
+				System.out.println("List joueurs: " + message);
 				String temp1 = message.substring(1);
 				temp1 = temp1.replace("[", "");
 				temp1 = temp1.replace("]", "");

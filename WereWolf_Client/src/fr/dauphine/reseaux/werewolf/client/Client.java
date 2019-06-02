@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Random;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -32,6 +33,9 @@ import javax.swing.border.TitledBorder;
 
 public class Client {
 
+	//TESTS
+	private final static boolean TEST = true;
+	
 	// Globals
 	private static ClientThread clientThread;
 	public static String userName = "Anonymous";
@@ -286,7 +290,16 @@ public class Client {
 
 		ConfigureLogInWindow();
 		LogInWindow_Action();
-		logInWindow.setVisible(true);
+		
+		if(TEST) {
+			Random rand = new Random();
+			
+			logInUsernameBox.setText("Client " + rand.nextInt(100000));
+			LOGIN_ACTION();
+		}
+		else {
+			logInWindow.setVisible(true);
+		}
 	}
 
 	public static void ConfigureLogInWindow() {

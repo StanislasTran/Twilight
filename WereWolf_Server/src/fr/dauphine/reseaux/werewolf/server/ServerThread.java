@@ -101,7 +101,12 @@ public class ServerThread extends Thread {
 						String playername = command.split(" ")[2];
 						server.resultWitchKill(vote, playername);
 					} else {
-						server.sendToRoom(location, message);
+						if(server.getRoomSelection().contains(username)) {
+							server.sendToSelectionRoom(message);
+
+						} else if(location.getUsers().contains(username)) {
+							server.sendToRoom(location, message);
+						}
 					}
 
 				} else {
