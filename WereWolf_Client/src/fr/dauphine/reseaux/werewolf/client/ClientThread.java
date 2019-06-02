@@ -111,6 +111,17 @@ public class ClientThread implements Runnable {
 						Client.displayText.append("\n" + temp2[1] + ": " + temp2[2]);
 					}
 				});
+			}else if(message.startsWith("SYSTEM")) {
+				final String  msg="System: "+message.substring(6);
+
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						Client.displayText.append(msg);
+					}
+				});
+
+				
 			}
 
 			else if (message.startsWith("@Narrator")) {

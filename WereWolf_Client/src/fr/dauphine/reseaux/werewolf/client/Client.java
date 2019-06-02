@@ -1,4 +1,5 @@
 ﻿package fr.dauphine.reseaux.werewolf.client;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -79,7 +80,7 @@ public class Client {
 			// sending UserName
 			output = new ObjectOutputStream(SOCK.getOutputStream());
 			try {
-				
+
 				output.writeObject(userName);
 				System.out.println(userName);
 				output.flush();

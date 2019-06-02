@@ -34,7 +34,7 @@ public class ServerThread extends Thread {
 
 		// add the player in selectionRoom
 		server.roomSelection.add(username);
-
+		server.sendPrivately(username, "SYSTEM Welcome in our game \n use the command '/createRoom (roomName) (number of player)' \n to create a room and '/joinRoom (roomName)' to join a room");
 		server.sendToSelectionRoom("!" + server.getRooms().keySet());
 
 		server.showMessage("\n" + username + "(" + socket.getInetAddress().getHostAddress() + ") is online");
@@ -55,6 +55,9 @@ public class ServerThread extends Thread {
 				} catch (Exception e) {
 					stop();
 				}
+				
+				
+				
 				if (message.toString().contains("@EE@")) {
 					String[] tabMsg = message.toString().split(";");
 
