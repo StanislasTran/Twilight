@@ -148,7 +148,8 @@ public class ServerThread extends Thread {
 	}
 
 	/**
-	 * @param location the location to set
+	 * @param location
+	 *            the location to set
 	 */
 	public void setLocation(Room location) {
 		this.location = location;
