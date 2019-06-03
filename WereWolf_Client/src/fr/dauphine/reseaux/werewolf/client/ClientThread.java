@@ -1,11 +1,15 @@
 ﻿package fr.dauphine.reseaux.werewolf.client;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 public class ClientThread implements Runnable {
 
@@ -27,28 +31,33 @@ public class ClientThread implements Runnable {
 		} catch (IOException e) {
 
 		}
-		try {
-			CheckStream();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-
-		}
+		CheckStream();
 
 	}
 
-	public void CheckStream() throws ClassNotFoundException, IOException {
+	public void CheckStream() {
 		while (true) {
 			RECEIVE();
 		}
 	}
 
-	public void RECEIVE() throws ClassNotFoundException, IOException {
+	public void RECEIVE() {
 		if (!in.equals(null)) {
-			String message = "";
-			message = (String) in.readObject();
-			System.out.println(message + " received");
+			String encryptedMessage = "";
+			try {
+
+				encryptedMessage = (String) in.readObject();
+
+				System.out.println(encryptedMessage + " crypted received");
+
+			} catch (ClassNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+
+			}
+
+			String message = AES.decrypt(encryptedMessage);
 
 			if (message.startsWith("ROOM")) {
 				System.out.println(message);
@@ -122,8 +131,44 @@ public class ClientThread implements Runnable {
 						// DefaultCaret caret = (DefaultCaret) Client.displayText.getCaret();
 						// caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 						Client.displayText.append("\n" + "NARRATOR >  " + temp2);
+
 					}
 				});
+
+			} else if (message.startsWith("@Timing")) {
+				final String temp2 = message.split(";")[1];
+
+				SwingUtilities.invokeLater(new Runnable() {
+					Timer timer;
+					long startTime = -1;
+					final long duration = 30000;
+
+					@Override
+					public void run() {
+
+						timer = new Timer(10, new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								if (startTime < 0) {
+									startTime = System.currentTimeMillis();
+								}
+								long now = System.currentTimeMillis();
+								long clockTime = now - startTime;
+								if (clockTime >= duration) {
+									clockTime = duration;
+									timer.stop();
+								}
+								SimpleDateFormat df = new SimpleDateFormat("mm:ss:SSS");
+
+								Client.top.setText("Online --- " + temp2 + " " + df.format(duration - clockTime));
+							}
+						});
+						timer.setInitialDelay(0);
+						timer.start();
+
+					}
+				});
+
 			} else if (message.startsWith("@Role")) {
 				final String temp2 = message.split(";")[1];
 
@@ -138,17 +183,17 @@ public class ClientThread implements Runnable {
 					}
 				});
 			}
-//			else if(message.startsWith("@")){
-//				final String temp3 = message.substring(1);
-//				
-//				SwingUtilities.invokeLater(
-//					new Runnable(){
-//						public void run() {
-//							Client.displayText.append("\n"+temp3);					
-//						}
-//					}
-//				);
-//			}
+			// else if(message.startsWith("@")){
+			// final String temp3 = message.substring(1);
+			//
+			// SwingUtilities.invokeLater(
+			// new Runnable(){
+			// public void run() {
+			// Client.displayText.append("\n"+temp3);
+			// }
+			// }
+			// );
+			// }
 
 		}
 	}
@@ -168,8 +213,9 @@ public class ClientThread implements Runnable {
 			writeStr = str;
 		} else
 			writeStr = "@EE@;" + Client.userName + ";" + str;
+		String encryptedMessage = AES.encrypt(writeStr);
 
-		Client.output.writeObject(writeStr);
+		Client.output.writeObject(encryptedMessage);
 		Client.output.flush();
 
 	}

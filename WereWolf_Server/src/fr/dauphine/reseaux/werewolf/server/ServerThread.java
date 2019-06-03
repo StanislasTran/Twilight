@@ -12,8 +12,7 @@ public class ServerThread extends Thread {
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
 	private String username;
-	Object message;
-
+	String message;
 	private Room location;
 
 	public ServerThread(Server server, Socket socket) throws IOException, ClassNotFoundException {
@@ -44,12 +43,15 @@ public class ServerThread extends Thread {
 	@Override
 	@SuppressWarnings("deprecation")
 	public void run() {
-
+	
 		try {
 			// Thread will run until connections are present
 			while (true) {
 				try {
-					message = input.readObject();
+					String encryptedMessage=(String) input.readObject();
+					System.out.println("received"+encryptedMessage);
+					message =AES.decrypt(encryptedMessage);
+					System.out.println(message);
 				} catch (Exception e) {
 					break;
 				}
@@ -70,6 +72,7 @@ public class ServerThread extends Thread {
 									try {
 										server.startGame(location);
 									} catch (InterruptedException e) {
+
 									}
 								}
 							}).start();
@@ -104,7 +107,6 @@ public class ServerThread extends Thread {
 							String playername = command.split(" ")[1];
 							server.resultWitchKill(location, username, playername);
 						}
-
 					} else {
 						if (server.getRoomSelection().contains(username)) {
 							server.sendToSelectionRoom(message);
