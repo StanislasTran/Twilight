@@ -12,7 +12,8 @@ public class ServerThread extends Thread {
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
 	private String username;
-	String message;
+	Object message;
+
 	private Room location;
 
 	public ServerThread(Server server, Socket socket) throws IOException, ClassNotFoundException {
@@ -43,17 +44,14 @@ public class ServerThread extends Thread {
 	@Override
 	@SuppressWarnings("deprecation")
 	public void run() {
-	
+
 		try {
 			// Thread will run until connections are present
 			while (true) {
 				try {
-					String encryptedMessage=(String) input.readObject();
-					System.out.println("received"+encryptedMessage);
-					message =AES.decrypt(encryptedMessage);
-					System.out.println(message);
+					message = input.readObject();
 				} catch (Exception e) {
-					e.printStackTrace();
+					break;
 				}
 				if (message.toString().contains("@EE@")) {
 					String[] tabMsg = message.toString().split(";");
@@ -72,7 +70,6 @@ public class ServerThread extends Thread {
 									try {
 										server.startGame(location);
 									} catch (InterruptedException e) {
-
 									}
 								}
 							}).start();
@@ -107,6 +104,7 @@ public class ServerThread extends Thread {
 							String playername = command.split(" ")[1];
 							server.resultWitchKill(location, username, playername);
 						}
+
 					} else {
 						if (server.getRoomSelection().contains(username)) {
 							server.sendToSelectionRoom(message);
@@ -123,19 +121,14 @@ public class ServerThread extends Thread {
 							formattedMsg);
 				}
 			}
-		} catch (
-
-		IOException e) {
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-
 		} finally {
 			try {
-				server.removeClient(username);
+				server.removeClient(location, username);
 				server.removeConnection(socket, username);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 		}
 	}
@@ -148,8 +141,7 @@ public class ServerThread extends Thread {
 	}
 
 	/**
-	 * @param location
-	 *            the location to set
+	 * @param location the location to set
 	 */
 	public void setLocation(Room location) {
 		this.location = location;
