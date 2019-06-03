@@ -44,6 +44,7 @@ public class AES {
 	public static String decrypt(String strToDecrypt) {
 
 		try {
+			
 			Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 			cipher.init(Cipher.DECRYPT_MODE, secretKey);
 			return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecrypt)));
@@ -55,7 +56,7 @@ public class AES {
 
 	public static void main(String[] args) {
 
-		String originalString = "bonjour";
+		String originalString = "CELA FONCTIONNE ";
 		String encryptedString = AES.encrypt(originalString);
 		String decryptedString = AES.decrypt(encryptedString);
 

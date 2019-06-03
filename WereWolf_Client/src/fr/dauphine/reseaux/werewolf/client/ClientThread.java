@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.Arrays;
 
+import javax.crypto.EncryptedPrivateKeyInfo;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -40,10 +41,11 @@ public class ClientThread implements Runnable {
 
 	public void RECEIVE() {
 		if (!in.equals(null)) {
-			String message = "";
+			String encryptedMessage = "";
 			try {
-				message = (String) in.readObject();
-				System.out.println(message+" received");
+				encryptedMessage = (String) in.readObject();
+				
+				System.out.println(encryptedMessage+" received");
 			} catch (ClassNotFoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -51,7 +53,7 @@ public class ClientThread implements Runnable {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-			
+			String message=AES.decrypt(encryptedMessage);
 			if (message.startsWith("ROOM")) {
 				System.out.println(message);
 				String temp1 = message.substring(4);
@@ -170,8 +172,9 @@ public class ClientThread implements Runnable {
 			writeStr = str;
 		} else
 			writeStr = "@EE@;" + Client.userName + ";" + str;
-
-		Client.output.writeObject(writeStr);
+		String encryptedMessage=AES.encrypt(writeStr);
+		
+		Client.output.writeObject(encryptedMessage);
 		Client.output.flush();
 
 	}

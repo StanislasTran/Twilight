@@ -55,7 +55,7 @@ public class AES {
 
 	public static void main(String[] args) {
 
-		String originalString = "bonjour";
+		String originalString = "CELA FONCTIONNE ";
 		String encryptedString = AES.encrypt(originalString);
 		String decryptedString = AES.decrypt(encryptedString);
 
