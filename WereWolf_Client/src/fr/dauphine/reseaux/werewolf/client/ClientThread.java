@@ -1,12 +1,15 @@
 ﻿package fr.dauphine.reseaux.werewolf.client;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
-import java.util.Arrays;
+import java.text.SimpleDateFormat;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 public class ClientThread implements Runnable {
 
@@ -43,7 +46,7 @@ public class ClientThread implements Runnable {
 			String message = "";
 			try {
 				message = (String) in.readObject();
-				System.out.println(message+" received");
+				System.out.println(message + " received");
 			} catch (ClassNotFoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -51,7 +54,7 @@ public class ClientThread implements Runnable {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-			
+
 			if (message.startsWith("ROOM")) {
 				System.out.println(message);
 				String temp1 = message.substring(4);
@@ -60,7 +63,7 @@ public class ClientThread implements Runnable {
 
 				currentUsers = temp1.split(", ");
 				System.out.println(currentUsers[0]);
-				//Arrays.sort(currentUsers);
+				// Arrays.sort(currentUsers);
 
 				try {
 
@@ -68,7 +71,7 @@ public class ClientThread implements Runnable {
 						@Override
 						public void run() {
 							Client.userOnlineList.setListData(currentUsers);
-							System.out.println(currentUsers[0]+"3");
+							System.out.println(currentUsers[0] + "3");
 
 						}
 					});
@@ -85,7 +88,7 @@ public class ClientThread implements Runnable {
 
 				currentUsers = temp1.split(", ");
 				System.out.println(currentUsers[0]);
-				//Arrays.sort(currentUsers);
+				// Arrays.sort(currentUsers);
 
 				try {
 
@@ -93,7 +96,7 @@ public class ClientThread implements Runnable {
 						@Override
 						public void run() {
 							Client.userOnlineList.setListData(currentUsers);
-							System.out.println(currentUsers[0]+"3");
+							System.out.println(currentUsers[0] + "3");
 
 						}
 					});
@@ -124,8 +127,44 @@ public class ClientThread implements Runnable {
 						// DefaultCaret caret = (DefaultCaret) Client.displayText.getCaret();
 						// caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 						Client.displayText.append("\n" + "NARRATOR >  " + temp2);
+
 					}
 				});
+
+			} else if (message.startsWith("@Timing")) {
+				final String temp2 = message.split(";")[1];
+
+				SwingUtilities.invokeLater(new Runnable() {
+					Timer timer;
+					long startTime = -1;
+					final long duration = 30000;
+
+					@Override
+					public void run() {
+
+						timer = new Timer(10, new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								if (startTime < 0) {
+									startTime = System.currentTimeMillis();
+								}
+								long now = System.currentTimeMillis();
+								long clockTime = now - startTime;
+								if (clockTime >= duration) {
+									clockTime = duration;
+									timer.stop();
+								}
+								SimpleDateFormat df = new SimpleDateFormat("mm:ss:SSS");
+
+								Client.top.setText("Online --- " + temp2 + " " + df.format(duration - clockTime));
+							}
+						});
+						timer.setInitialDelay(0);
+						timer.start();
+
+					}
+				});
+
 			} else if (message.startsWith("@Role")) {
 				final String temp2 = message.split(";")[1];
 
@@ -140,17 +179,17 @@ public class ClientThread implements Runnable {
 					}
 				});
 			}
-//			else if(message.startsWith("@")){
-//				final String temp3 = message.substring(1);
-//				
-//				SwingUtilities.invokeLater(
-//					new Runnable(){
-//						public void run() {
-//							Client.displayText.append("\n"+temp3);					
-//						}
-//					}
-//				);
-//			}
+			// else if(message.startsWith("@")){
+			// final String temp3 = message.substring(1);
+			//
+			// SwingUtilities.invokeLater(
+			// new Runnable(){
+			// public void run() {
+			// Client.displayText.append("\n"+temp3);
+			// }
+			// }
+			// );
+			// }
 
 		}
 	}
