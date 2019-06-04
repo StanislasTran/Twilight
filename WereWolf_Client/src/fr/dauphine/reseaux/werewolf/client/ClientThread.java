@@ -143,6 +143,21 @@ public class ClientThread implements Runnable {
 					}
 				});
 
+			} else if (message.startsWith("@Game")) {
+				final String temp2 = message.split(";")[1];
+
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						Client.displayText.append("\n");
+						// Client.displayText.append("\n \n \n \n\n\n\n\n\n");
+						// DefaultCaret caret = (DefaultCaret) Client.displayText.getCaret();
+						// caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+						Client.displayText.append("\n" + "ATTENTION >  " + temp2);
+
+					}
+				});
+
 			} else if (message.startsWith("@Timing")) {
 				final String temp2 = message.split(";")[1];
 

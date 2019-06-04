@@ -5,6 +5,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import fr.dauphine.reseaux.werewolf.server.gameObjects.Role;
+
 public class ServerThread extends Thread {
 
 	private Server server;
@@ -50,7 +52,7 @@ public class ServerThread extends Thread {
 				try {
 					String encryptedMessage = (String) input.readObject();
 					message = AES.decrypt(encryptedMessage);
-					System.out.println("decrypted "+message);
+					System.out.println("decrypted " + message);
 				} catch (Exception e) {
 					break;
 				}
@@ -87,25 +89,51 @@ public class ServerThread extends Thread {
 						System.out.println("room created");
 
 					} else if (command.startsWith("/join")) {
+
 						String roomName = command.split(" ")[1];
 						server.joinRoom(roomName, username);
 						location = server.getRooms().get(roomName);
+
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
-						server.vote(location, username, vote);
+
+						if (location.getRoleTurn().equals(Role.WOLF)) {
+							if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
+								server.sendPrivately(username,
+										"@Game;Vous n'etes pas loups-garou, vous ne pouvez pas voter.");
+							} else {
+								server.vote(location, username, vote);
+							}
+						}
 					} else if (command.startsWith("/witch_save")) {
 
-						if (command.split(" ") != null && command.split(" ").length > 1) {
+						if (location.getRoleTurn().equals(Role.WOLF)) {
+							if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
+								server.sendPrivately(username,
+										"@Game;Vous n'etes pas la sorcière, vous ne pouvez pas voter.");
+							} else {
+								if (command.split(" ") != null && command.split(" ").length > 1) {
 
-							String vote = command.split(" ")[1];
-							server.resultWitchSave(location, username, vote);
+									String vote = command.split(" ")[1];
+									server.resultWitchSave(location, username, vote);
 
+								}
+							}
 						}
+
 					} else if (command.startsWith("/witch_kill")) {
-						if (command.split(" ") != null && command.split(" ").length > 1) {
-							String playername = command.split(" ")[1];
-							server.resultWitchKill(location, username, playername);
+						if (location.getRoleTurn().equals(Role.WOLF)) {
+							if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
+								server.sendPrivately(username,
+										"@Game;Vous n'etes pas sorcière, vous ne pouvez pas voter.");
+							} else {
+								if (command.split(" ") != null && command.split(" ").length > 1) {
+									String playername = command.split(" ")[1];
+									server.resultWitchKill(location, username, playername);
+								}
+							}
 						}
+
 					} else {
 						if (server.getRoomSelection().contains(username)) {
 							server.sendToSelectionRoom(message);
