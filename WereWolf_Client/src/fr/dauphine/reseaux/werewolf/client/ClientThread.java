@@ -26,11 +26,6 @@ public class ClientThread implements Runnable {
 	@Override
 	public void run() {
 
-		try {
-			in = new ObjectInputStream(SOCK.getInputStream());
-		} catch (IOException e) {
-
-		}
 		CheckStream();
 
 	}

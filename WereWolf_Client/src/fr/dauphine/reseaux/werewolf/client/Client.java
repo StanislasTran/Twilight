@@ -11,6 +11,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -86,11 +87,13 @@ public class Client {
 
 	public static final String ipServer = "25.31.163.176";
 
-	private static final List<String> serverUsersConnected = new ArrayList<String>();
+	private static List<String> serverUsersConnected = new ArrayList<String>();
 
+	@SuppressWarnings("unchecked")
 	public static void preConnect() {
 		try {
 			if (localhost) {
+
 				SOCK = new Socket(InetAddress.getLocalHost(), port);
 			} else {
 				SOCK = new Socket(InetAddress.getByName(ipServer), port);
@@ -100,6 +103,17 @@ public class Client {
 
 			// sending UserName
 			output = new ObjectOutputStream(SOCK.getOutputStream());
+
+			clientThread.in = new ObjectInputStream(SOCK.getInputStream());
+
+			// waiting for list of users connected
+			String tmp = (String) clientThread.in.readObject();
+			// toString of a Set
+			tmp = tmp.replaceAll("[\\[\\]]", "");
+
+			for (String user : tmp.split(", ")) {
+				serverUsersConnected.add(user);
+			}
 
 		} catch (Exception x) {
 			System.out.println(x);
@@ -352,12 +366,11 @@ public class Client {
 		logInEnter.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (!serverUsersConnected.contains(userName)) {
+				if (!serverUsersConnected.contains(logInUsernameBox.getText().trim())) {
 					LOGIN_ACTION();
 				} else {
 					BuildPopUpWindow("Username already taken");
 				}
-
 			}
 
 		});
