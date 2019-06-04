@@ -49,7 +49,6 @@ public class ServerThread extends Thread {
 			while (true) {
 				try {
 					String encryptedMessage = (String) input.readObject();
-					System.out.println("received" + encryptedMessage);
 					message = AES.decrypt(encryptedMessage);
 					System.out.println("decrypted "+message);
 				} catch (Exception e) {

@@ -48,7 +48,6 @@ public class ClientThread implements Runnable {
 
 				encryptedMessage = (String) in.readObject();
 
-				System.out.println(encryptedMessage + " crypted received");
 
 			} catch (ClassNotFoundException e1) {
 				// TODO Auto-generated catch block
@@ -58,7 +57,7 @@ public class ClientThread implements Runnable {
 			}
 
 			String message = AES.decrypt(encryptedMessage);
-			System.out.println(message+" decrypted");
+			System.out.println(message + " decrypted");
 
 			if (message.startsWith("ROOM")) {
 				System.out.println(message);
@@ -85,6 +84,14 @@ public class ClientThread implements Runnable {
 				}
 			}
 
+			if (message.startsWith("@END")) {
+				/*
+				 * DISPLAY POPUP
+				 * 
+				 * 
+				 */
+			}
+			
 			if (message.startsWith("!")) {
 				System.out.println("List joueurs: " + message);
 				String temp1 = message.substring(1);

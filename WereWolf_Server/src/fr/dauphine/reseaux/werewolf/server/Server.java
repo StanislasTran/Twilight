@@ -132,21 +132,23 @@ public class Server {
 	}
 
 	// Sending a message to all the available clients
-//	public void sendToAll(String data) throws IOException {
-//		String cryptedData =AES.encrypt(data);
-//
-//		for (Enumeration<ObjectOutputStream> e = getOutputStreams(); e.hasMoreElements();) {
-//			// since we don't want server to remove one client and at the same time sending
-//			// message to it
-//			synchronized (outputStreams) {
-//				ObjectOutputStream tempOutput = e.nextElement();
-//				tempOutput.writeObject(cryptedData);
-//				tempOutput.flush();
-//				System.out.println("msg send" + cryptedData.toString());
-//
-//			}
-//		}
-//	}
+	// public void sendToAll(String data) throws IOException {
+	// String cryptedData =AES.encrypt(data);
+	//
+	// for (Enumeration<ObjectOutputStream> e = getOutputStreams();
+	// e.hasMoreElements();) {
+	// // since we don't want server to remove one client and at the same time
+	// sending
+	// // message to it
+	// synchronized (outputStreams) {
+	// ObjectOutputStream tempOutput = e.nextElement();
+	// tempOutput.writeObject(cryptedData);
+	// tempOutput.flush();
+	// System.out.println("msg send" + cryptedData.toString());
+	//
+	// }
+	// }
+	// }
 
 	// To get Output Stream of the available clients from the hash table
 	private Enumeration<ObjectOutputStream> getOutputStreams() {
@@ -212,7 +214,6 @@ public class Server {
 
 	}
 
-	
 	/*
 	 * 
 	 * 
@@ -221,7 +222,7 @@ public class Server {
 	 * 
 	 */
 	// GAME METHODS
-	
+
 	public void startGame(Room location) throws InterruptedException {
 
 		location.setSeerPower(true);
@@ -240,7 +241,7 @@ public class Server {
 
 			while (!gameFinished(location)) {
 				try {
-					
+
 					/*
 					 * 
 					 * VILLAGER turn
@@ -248,20 +249,18 @@ public class Server {
 					 * 
 					 */
 					if (!first_turn) {
-						
+
 						villagersVote(location);
-						
+
 						// TODO
 					}
-					
-					
+
 					first_turn = false;
-					
-					
+
 					/*
 					 * 
 					 * 
-					 * WEREWOLF TURN 
+					 * WEREWOLF TURN
 					 * 
 					 * 
 					 */
@@ -280,15 +279,14 @@ public class Server {
 							location.getRoleMap().remove(eliminatedPlayerWolf);
 						}
 					}
-					
-					
+
 					/*
 					 * 
 					 * WITCH turn
 					 * 
 					 * 
 					 */
-										
+
 					if (location.getUsers().size() > 3) {
 						location.setRoleTurn(Role.WITCH);
 						if (witch_Alive(location)) {
@@ -334,6 +332,9 @@ public class Server {
 								"@Narrator;"
 										+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
 										+ eliminatedPlayerWolf + " et " + eliminatedPlayerWitch + " sont morts ... !");
+
+						sendToRoom(location, "@DeadPlayer;" + eliminatedPlayerWolf);
+						sendToRoom(location, "@DeadPlayer;" + eliminatedPlayerWolf);
 					} else if ("Nobody".equals(eliminatedPlayerWolf) && "Nobody".equals(eliminatedPlayerWitch)) {
 						sendToRoom(location, "@Narrator;"
 								+ "Le jour se leve: les villageois se reveillent et decouvrent avec bonheur que personne n'est mort !");
@@ -351,6 +352,16 @@ public class Server {
 
 					sendToRoom(location, "@Timing;" + "Villagers turn");
 
+					Set<String> currentUsers = location.getUsers();
+					if (!eliminatedPlayerWolf.equals("")) {
+						currentUsers.remove(eliminatedPlayerWolf);
+						currentUsers.add(eliminatedPlayerWolf + "[Dead]");
+					}
+					if (!eliminatedPlayerWitch.equals("")) {
+						currentUsers.remove(eliminatedPlayerWitch);
+						currentUsers.add(eliminatedPlayerWitch + "[Dead]");
+					}
+
 					System.out.println("Alive " + location.getPlayersAlive());
 					System.out.println("Dead " + location.getPlayersDead());
 					location.getVoteMap().clear();
@@ -361,9 +372,27 @@ public class Server {
 
 			if (winner(location).equals(Role.WOLF)) {
 				sendToRoom(location, "@Narrator;Les loups-garous ont gagne !");
+
 			} else {
 				sendToRoom(location, "@Narrator;Les villageois ont gagne ! Vive le village de Thiercelieux");
 			}
+/*
+			if (winner(location) != null) {
+				System.out.println("lejeu prend fin");
+
+				sendToRoom(location, "@END " + winner(location));
+				for (String user : location.getUsers()) {
+					this.roomSelection.add(user);
+
+				}
+				this.rooms.remove(location.getName());
+				location.setHost(null);
+				location = null;
+				sendToSelectionRoom("ROOM" + rooms.keySet().toString());
+				
+			
+			}
+*/
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -432,9 +461,9 @@ public class Server {
 			return null;
 	}
 
-	
 	/**
 	 * this function give a role to the players
+	 * 
 	 * @param room
 	 * @throws IOException
 	 */
@@ -504,18 +533,22 @@ public class Server {
 	public void vote(Room room, String usernameVoter, String playerVoted) throws IOException {
 		if (room.getPlayersAlive().contains(playerVoted)) {
 			room.getVoteMap().put(usernameVoter, playerVoted);
-			System.out.println(usernameVoter+" à voté pour "+room.getVoteMap().get(usernameVoter));
-			System.out.println("size "+room.getVoteMap() );
+
+			System.out.println(usernameVoter + " à voté pour " + room.getVoteMap().get(usernameVoter));
+			System.out.println("size " + room.getVoteMap());
 			sendPrivately(usernameVoter, "@Narrator;Vous avez vote " + playerVoted);
+
 		} else {
+
 			sendPrivately(usernameVoter, "@Narrator;" + "Le joueur est deja mort, choisissez un autre !");
+
 		}
 
 	}
-	
-	
+
 	/**
-	 * initlilize the list of player who are alive at the beginning 
+	 * initlilize the list of player who are alive at the beginning
+	 * 
 	 * @param room
 	 */
 	public void initiateListPlayerAlive(Room room) {
@@ -525,18 +558,17 @@ public class Server {
 			room.getPlayersAlive().add(player);
 		}
 	}
-	
 
-	
 	/**
 	 * this function is used for werewolf to choose an player and kill him
+	 * 
 	 * @param room
 	 * @return the name of killed player
 	 */
 	public String eliminate(Room room) {
 		Map<String, Integer> playersVotedTurn = new HashMap<>();
-System.out.println("eliminate function");
-System.out.println(room.getVoteMap().size());
+		System.out.println("eliminate function");
+		System.out.println(room.getVoteMap().size());
 		for (String name : room.getVoteMap().values()) {
 
 			if (playersVotedTurn.containsKey(name)) {
@@ -544,12 +576,12 @@ System.out.println(room.getVoteMap().size());
 			} else {
 				playersVotedTurn.put(name, 1);
 			}
-			System.out.println(playersVotedTurn.values()+ "comptages des votes ");
+			System.out.println(playersVotedTurn.values() + "comptages des votes ");
 
 		}
 
-		int max = 0;
-		String eliminated = "Nobody";
+		String eliminated = room.getPlayersAlive().get(0);
+		int max = playersVotedTurn.get(eliminated);
 
 		for (String name : playersVotedTurn.keySet()) {
 			if (playersVotedTurn.get(name) > max) {
@@ -557,41 +589,41 @@ System.out.println(room.getVoteMap().size());
 				eliminated = name;
 			}
 		}
-		if (!"Nobody".equals(eliminated)) {
-			killPlayer(room,eliminated);
-		}
+
+		killPlayer(room, eliminated);
 
 		return eliminated;
 	}
 
-	
 	/**
-	 * for villagers turn they vote
-	 * clean the vote map at the beginning
+	 * for villagers turn they vote clean the vote map at the beginning
+	 * 
 	 * @param location
-	 * @throws InterruptedException 
-	 * @throws IOException 
+	 * @throws InterruptedException
+	 * @throws IOException
 	 */
 	public void villagersVote(Room location) throws InterruptedException, IOException {
 		sendToRoom(location, "@Narrator;"
 				+ "De suite les villageois se concertent et decident de voter pour désigner un coupable ('/vote PSEUDO' pour voter contre la cible)");
 		location.getVoteMap().clear();
 		Thread.sleep(DUREE_TOUR);
-		
-		
-		sendToRoom(location, "@Narrator;"
-				+ eliminate(location)+ "a été tué par le village");
+		String userKilledByVillage = eliminate(location);
+		sendToRoom(location, "@Narrator;" + userKilledByVillage + "a été tué par le village");
+		Set<String> currentUsers = location.getUsers();
+		if (!userKilledByVillage.equals("")) {
+			currentUsers.remove(userKilledByVillage);
+			currentUsers.add(userKilledByVillage + "[Dead]");
+		}
 		location.getVoteMap().clear();
-		
-	
+
 	}
-	
-	
-	public void killPlayer(Room room,String player) {
+
+	public void killPlayer(Room room, String player) {
 		room.getPlayersAlive().remove(player);
 		room.getPlayersDead().addLast(player);
-		
+
 	}
+
 	public String sendDeadPlayerToWitch(Room room) throws IOException, InterruptedException {
 		String eliminated = room.getPlayersDead().getLast();
 		for (String player : room.getRoleMap().keySet()) {
