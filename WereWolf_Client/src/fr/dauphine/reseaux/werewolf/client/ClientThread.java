@@ -58,6 +58,7 @@ public class ClientThread implements Runnable {
 			}
 
 			String message = AES.decrypt(encryptedMessage);
+			System.out.println(message+" decrypted");
 
 			if (message.startsWith("ROOM")) {
 				System.out.println(message);
