@@ -99,7 +99,7 @@ public class Server {
 	 * @throws IOException
 	 */
 	public void sendToSelectionRoom(String data) throws IOException {
-		String cryptedData =AES.encrypt(data);
+		String cryptedData = AES.encrypt(data);
 		for (String userName : roomSelection) {
 			synchronized (roomSelection) {
 				ObjectOutputStream tempOutput = clients.get(userName);
@@ -110,8 +110,6 @@ public class Server {
 		}
 	}
 
-	
-
 	/**
 	 * send the data to all user in the Room room
 	 * 
@@ -119,7 +117,7 @@ public class Server {
 	 * @throws IOException
 	 */
 	public void sendToRoom(Room room, String data) throws IOException {
-		String cryptedData =AES.encrypt(data);
+		String cryptedData = AES.encrypt(data);
 
 		for (String userName : room.getUsers()) {
 			synchronized (clients) {
@@ -157,14 +155,14 @@ public class Server {
 	}
 
 	// Sending private message
-		public void sendPrivately(String username, String message) throws IOException {
-			String cryptedMessage=AES.encrypt(message);
-			// TODO Auto-generated method stub
-			ObjectOutputStream tempOutput = clients.get(username);
-			tempOutput.writeObject(cryptedMessage);
-			tempOutput.flush();
+	public void sendPrivately(String username, String message) throws IOException {
+		String cryptedMessage = AES.encrypt(message);
+		// TODO Auto-generated method stub
+		ObjectOutputStream tempOutput = clients.get(username);
+		tempOutput.writeObject(cryptedMessage);
+		tempOutput.flush();
 
-		}
+	}
 
 	// Removing the client from the client hash table
 	public void removeClient(Room room, String username) throws IOException {
@@ -182,8 +180,20 @@ public class Server {
 				if (room.getUsers().isEmpty()) {
 					rooms.remove(room.getName());
 					sendToSelectionRoom("ROOM" + rooms.keySet().toString());
+				} else {
+					if (room.getHost().equals(username)) {
+						String newHost = "";
+						for (String user : room.getUsers()) {
+							newHost = user;
+							break;
+						}
+
+						room.setHost(newHost);
+						sendPrivately(newHost, "@Narrator;Host have left the game. You are the new host !");
+					}
+					sendToRoom(room, "!" + room.getUsers());
+
 				}
-				sendToRoom(room, "!" + room.getUsers());
 			}
 		}
 	}
@@ -225,7 +235,7 @@ public class Server {
 					if (!first_turn) {
 						sendToRoom(location, "@Narrator;"
 								+ "De suite les villageois se concertent et decident de voter pour d√©signer un coupable ('/vote PSEUDO' pour voter contre la cible)");
-						
+
 						Thread.sleep(DUREE_TOUR);
 
 						// TODO
@@ -277,7 +287,8 @@ public class Server {
 
 						sendToRoom(location, "@Narrator;" + "La Voyante se reveille");
 						sendToRoom(location, "@Timing;" + "Seer turn");
-						sendToRoom(location, "@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
+						sendToRoom(location,
+								"@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
 
 						// TODO†VOYANTE ‡ implementer
 
@@ -305,7 +316,7 @@ public class Server {
 										+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
 										+ eliminatedPlayerWitch + " est mort... !");
 					}
-					
+
 					sendToRoom(location, "@Timing;" + "Villagers turn");
 
 					System.out.println("Alive " + location.getPlayersAlive());
