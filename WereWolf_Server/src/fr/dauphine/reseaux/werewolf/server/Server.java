@@ -132,21 +132,23 @@ public class Server {
 	}
 
 	// Sending a message to all the available clients
-//	public void sendToAll(String data) throws IOException {
-//		String cryptedData =AES.encrypt(data);
-//
-//		for (Enumeration<ObjectOutputStream> e = getOutputStreams(); e.hasMoreElements();) {
-//			// since we don't want server to remove one client and at the same time sending
-//			// message to it
-//			synchronized (outputStreams) {
-//				ObjectOutputStream tempOutput = e.nextElement();
-//				tempOutput.writeObject(cryptedData);
-//				tempOutput.flush();
-//				System.out.println("msg send" + cryptedData.toString());
-//
-//			}
-//		}
-//	}
+	// public void sendToAll(String data) throws IOException {
+	// String cryptedData =AES.encrypt(data);
+	//
+	// for (Enumeration<ObjectOutputStream> e = getOutputStreams();
+	// e.hasMoreElements();) {
+	// // since we don't want server to remove one client and at the same time
+	// sending
+	// // message to it
+	// synchronized (outputStreams) {
+	// ObjectOutputStream tempOutput = e.nextElement();
+	// tempOutput.writeObject(cryptedData);
+	// tempOutput.flush();
+	// System.out.println("msg send" + cryptedData.toString());
+	//
+	// }
+	// }
+	// }
 
 	// To get Output Stream of the available clients from the hash table
 	private Enumeration<ObjectOutputStream> getOutputStreams() {
@@ -262,8 +264,8 @@ public class Server {
 						if (witch_Alive(location)) {
 							sendToRoom(location, "@Narrator;" + "La sorciere se reveille");
 
-							// Envoie un MP pour lui dire qui est mort;le joueur est rajouté à la liste des
-							// alives s'il est ressuscité
+							// Envoie un MP pour lui dire qui est mort;le joueur est rajoutï¿½ ï¿½ la liste des
+							// alives s'il est ressuscitï¿½
 							if (!"Nobody".equals(eliminatedPlayerWolf)) {
 								eliminatedPlayerWolf = sendDeadPlayerToWitch(location);
 							}
@@ -290,7 +292,7 @@ public class Server {
 						sendToRoom(location,
 								"@Narrator;" + "Voyante choisissez le joueur dont vous voulez voir la carte");
 
-						// TODO VOYANTE à implementer
+						// TODOï¿½VOYANTE ï¿½ implementer
 
 					}
 
@@ -302,6 +304,9 @@ public class Server {
 								"@Narrator;"
 										+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
 										+ eliminatedPlayerWolf + " et " + eliminatedPlayerWitch + " sont morts ... !");
+
+						sendToRoom(location, "@DeadPlayer;" + eliminatedPlayerWolf);
+						sendToRoom(location, "@DeadPlayer;" + eliminatedPlayerWolf);
 					} else if ("Nobody".equals(eliminatedPlayerWolf) && "Nobody".equals(eliminatedPlayerWitch)) {
 						sendToRoom(location, "@Narrator;"
 								+ "Le jour se leve: les villageois se reveillent et decouvrent avec bonheur que personne n'est mort !");
@@ -318,6 +323,16 @@ public class Server {
 					}
 
 					sendToRoom(location, "@Timing;" + "Villagers turn");
+
+					Set<String> currentUsers = location.getUsers();
+					if (!eliminatedPlayerWolf.equals("")) {
+						currentUsers.remove(eliminatedPlayerWolf);
+						currentUsers.add(eliminatedPlayerWolf + "[Dead]");
+					}
+					if (!eliminatedPlayerWitch.equals("")) {
+						currentUsers.remove(eliminatedPlayerWitch);
+						currentUsers.add(eliminatedPlayerWitch + "[Dead]");
+					}
 
 					System.out.println("Alive " + location.getPlayersAlive());
 					System.out.println("Dead " + location.getPlayersDead());
@@ -466,9 +481,9 @@ public class Server {
 	public void vote(Room room, String usernameVoter, String playerVoted) throws IOException {
 		if (room.getPlayersAlive().contains(playerVoted)) {
 			room.getVoteMap().put(usernameVoter, playerVoted);
-			sendPrivately(usernameVoter, "@Narrator;Vous avez voté " + playerVoted);
+			sendPrivately(usernameVoter, "@Narrator;Vous avez votï¿½ " + playerVoted);
 		} else {
-			sendPrivately(usernameVoter, "@Narrator;" + "Le joueur est déjà mort, choisissez un autre !");
+			sendPrivately(usernameVoter, "@Narrator;" + "Le joueur est dï¿½jï¿½ mort, choisissez un autre !");
 		}
 
 	}
@@ -619,14 +634,16 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection the roomSelection to set
+	 * @param roomSelection
+	 *            the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms the rooms to set
+	 * @param rooms
+	 *            the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;
