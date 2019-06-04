@@ -77,12 +77,22 @@ public class Client {
 	public static JLabel popUpText = new JLabel("");
 	public static JButton popUpEnter = new JButton("Back");
 
+	// NETWORK
+	public static final int port = 2620;
+
+	public static final boolean localhost = false;
+
+	public static final String ipServer = "25.31.163.176";
+
 	public static void Connect() {
 
 		try {
-			final int port = 5555;
-			SOCK = new Socket(InetAddress.getLocalHost(), port);
+			if (localhost) {
+				SOCK = new Socket(InetAddress.getLocalHost(), port);
+			} else {
+				SOCK = new Socket(InetAddress.getByName(ipServer), port);
 
+			}
 			clientThread = new ClientThread(SOCK);
 
 			// sending UserName
