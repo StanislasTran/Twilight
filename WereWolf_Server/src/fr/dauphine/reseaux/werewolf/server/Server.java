@@ -562,8 +562,8 @@ public class Server {
 
 		}
 
-		int max = 0;
-		String eliminated = "Nobody";
+		String eliminated = room.getPlayersAlive().get(0);
+		int max = playersVotedTurn.get(eliminated);
 
 		for (String name : playersVotedTurn.keySet()) {
 			if (playersVotedTurn.get(name) > max) {
@@ -571,9 +571,8 @@ public class Server {
 				eliminated = name;
 			}
 		}
-		if (!"Nobody".equals(eliminated)) {
-			killPlayer(room, eliminated);
-		}
+
+		killPlayer(room, eliminated);
 
 		return eliminated;
 	}
@@ -590,8 +589,13 @@ public class Server {
 				+ "De suite les villageois se concertent et decident de voter pour désigner un coupable ('/vote PSEUDO' pour voter contre la cible)");
 		location.getVoteMap().clear();
 		Thread.sleep(DUREE_TOUR);
-
-		sendToRoom(location, "@Narrator;" + eliminate(location) + "a été tué par le village");
+		String userKilledByVillage = eliminate(location);
+		sendToRoom(location, "@Narrator;" + userKilledByVillage + "a été tué par le village");
+		Set<String> currentUsers = location.getUsers();
+		if (!userKilledByVillage.equals("")) {
+			currentUsers.remove(userKilledByVillage);
+			currentUsers.add(userKilledByVillage + "[Dead]");
+		}
 		location.getVoteMap().clear();
 
 	}
