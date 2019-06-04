@@ -58,7 +58,7 @@ public class ClientThread implements Runnable {
 			}
 
 			String message = AES.decrypt(encryptedMessage);
-			System.out.println(message+" decrypted");
+			System.out.println(message + " decrypted");
 
 			if (message.startsWith("ROOM")) {
 				System.out.println(message);
@@ -132,6 +132,21 @@ public class ClientThread implements Runnable {
 						// DefaultCaret caret = (DefaultCaret) Client.displayText.getCaret();
 						// caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 						Client.displayText.append("\n" + "NARRATOR >  " + temp2);
+
+					}
+				});
+
+			} else if (message.startsWith("@Game")) {
+				final String temp2 = message.split(";")[1];
+
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						Client.displayText.append("\n");
+						// Client.displayText.append("\n \n \n \n\n\n\n\n\n");
+						// DefaultCaret caret = (DefaultCaret) Client.displayText.getCaret();
+						// caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+						Client.displayText.append("\n" + "ATTENTION >  " + temp2);
 
 					}
 				});
