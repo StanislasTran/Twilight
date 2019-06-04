@@ -333,8 +333,6 @@ public class Server {
 										+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
 										+ eliminatedPlayerWolf + " et " + eliminatedPlayerWitch + " sont morts ... !");
 
-						sendToRoom(location, "@DeadPlayer;" + eliminatedPlayerWolf);
-						sendToRoom(location, "@DeadPlayer;" + eliminatedPlayerWolf);
 					} else if ("Nobody".equals(eliminatedPlayerWolf) && "Nobody".equals(eliminatedPlayerWitch)) {
 						sendToRoom(location, "@Narrator;"
 								+ "Le jour se leve: les villageois se reveillent et decouvrent avec bonheur que personne n'est mort !");
