@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import javax.swing.JButton;
@@ -35,7 +37,7 @@ import javax.swing.border.TitledBorder;
 public class Client {
 
 	// TESTS
-	private final static boolean TEST = true;
+	private final static boolean TEST = false;
 
 	// Globals
 	private static ClientThread clientThread;
@@ -84,8 +86,9 @@ public class Client {
 
 	public static final String ipServer = "25.31.163.176";
 
-	public static void Connect() {
+	private static final List<String> serverUsersConnected = new ArrayList<String>();
 
+	public static void preConnect() {
 		try {
 			if (localhost) {
 				SOCK = new Socket(InetAddress.getLocalHost(), port);
@@ -97,25 +100,29 @@ public class Client {
 
 			// sending UserName
 			output = new ObjectOutputStream(SOCK.getOutputStream());
-			try {
-
-				output.writeObject(userName);
-				System.out.println(userName);
-				output.flush();
-			} catch (IOException ioException) {
-				JOptionPane.showMessageDialog(null, "Error - UserName not Sent!");
-			}
-
-			top.setText("Online");
-
-			Thread X = new Thread(clientThread);
-			X.start();
 
 		} catch (Exception x) {
 			System.out.println(x);
 			JOptionPane.showMessageDialog(null, "Server Not Responding");
 			System.exit(0);
 		}
+	}
+
+	public static void Connect() {
+		try {
+
+			output.writeObject(userName);
+			System.out.println(userName);
+			output.flush();
+		} catch (IOException ioException) {
+			JOptionPane.showMessageDialog(null, "Error - UserName not Sent!");
+		}
+
+		top.setText("Online");
+
+		Thread X = new Thread(clientThread);
+		X.start();
+
 	}
 
 	public static void BuildMainWindow() {
@@ -300,6 +307,7 @@ public class Client {
 	}
 
 	public static void Initialize() {
+		preConnect();
 		submit.setEnabled(false);
 		mainWindow.setEnabled(false);
 	}
@@ -344,7 +352,12 @@ public class Client {
 		logInEnter.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				LOGIN_ACTION();
+				if (!serverUsersConnected.contains(userName)) {
+					LOGIN_ACTION();
+				} else {
+					BuildPopUpWindow("Username already taken");
+				}
+
 			}
 
 		});
