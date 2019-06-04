@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import javax.swing.JFrame;
@@ -292,7 +293,8 @@ public class Server {
 						if (witch_Alive(location)) {
 							sendToRoom(location, "@Narrator;" + "La sorciere se reveille");
 
-							// Envoie un MP pour lui dire qui est mort;le joueur est rajout� � la liste des
+							// Envoie un MP pour lui dire qui est mort;le joueur est rajout� � la liste
+							// des
 							// alives s'il est ressuscit�
 							if (!"Nobody".equals(eliminatedPlayerWolf)) {
 								eliminatedPlayerWolf = sendDeadPlayerToWitch(location);
@@ -562,8 +564,10 @@ public class Server {
 
 		}
 
-		String eliminated = room.getPlayersAlive().get(0);
-		int max = playersVotedTurn.get(eliminated);
+		Random rand = new Random();
+
+		String eliminated = room.getPlayersAlive().get(rand.nextInt(room.getPlayersAlive().size()));
+		int max = -1;
 
 		for (String name : playersVotedTurn.keySet()) {
 			if (playersVotedTurn.get(name) > max) {
@@ -714,16 +718,14 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection
-	 *            the roomSelection to set
+	 * @param roomSelection the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms
-	 *            the rooms to set
+	 * @param rooms the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;
