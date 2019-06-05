@@ -649,8 +649,7 @@ public class Server {
 			roles.add(Role.WITCH);
 
 		}
-
-		Collections.sort(roles);
+		Collections.shuffle(roles);
 		room.setRoleMap(new HashMap<String, Role>());
 
 		for (String player : players) {
