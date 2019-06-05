@@ -88,6 +88,33 @@ public class ServerThread extends Thread {
 								}
 							}).start();
 						}
+					} else if (command.startsWith("/back")) {
+						if (server.getRoomSelection().contains(username)) {
+							server.sendPrivately(username, "SYSTEM Vous êtes déjà dans la selectionRoom");
+						}
+						if (this.location.getStatus().equals(Status.WAITING)) {
+
+							if (location.getHost().equals(username)) {
+								for (String user : location.getUsers()) {
+									server.roomSelection.add(user);
+
+								}
+								server.getRooms().remove(location.getName());
+							} else {
+								server.roomSelection.add(username);
+
+							}
+							location.setHost(null);
+							location.setUsers(null);
+							location = null;
+
+							server.sendToSelectionRoom("ROOM " + server.getRooms().keySet());
+							location = null;
+						} else {
+							if (server.getRoomSelection().contains(username)) {
+								server.sendPrivately(username, "SYSTEM impossible de sortir d'une aprtie en cours");
+							}
+						}
 
 					} else if (command.startsWith("/createRoom")) {
 
@@ -100,7 +127,7 @@ public class ServerThread extends Thread {
 								location = server.getRooms().get(roomName);
 								server.sendRoomNameToUser(location, username);
 								System.out.println("room created");
-							}else {
+							} else {
 								server.sendPrivately(username, "SYSTEM \n Ce nom de Room est déjà utilisé");
 
 							}
