@@ -89,9 +89,11 @@ public class ClientThread implements Runnable {
 
 			}
 
+
 			if (message.startsWith("SYSTEM")) {
 				Client.displayText.append("Système: "+message.substring(8) );
 			}
+
 
 			if (message.startsWith("!")) {
 				System.out.println("List joueurs: " + message);
@@ -140,6 +142,18 @@ public class ClientThread implements Runnable {
 						// DefaultCaret caret = (DefaultCaret) Client.displayText.getCaret();
 						// caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 						Client.displayText.append("\n" + "NARRATOR >  " + temp2);
+
+					}
+				});
+
+			} else if (message.startsWith("@Twilight")) {
+				final String temp2 = message.split(";")[1];
+
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						Client.displayText.append("\n");
+						Client.displayText.append("\n" + "TWILIGHT >  " + temp2);
 
 					}
 				});
