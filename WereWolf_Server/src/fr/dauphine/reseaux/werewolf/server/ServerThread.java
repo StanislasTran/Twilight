@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import fr.dauphine.reseaux.werewolf.server.gameObjects.Role;
+import fr.dauphine.reseaux.werewolf.server.gameObjects.Status;
 
 public class ServerThread extends Thread {
 
@@ -65,9 +66,17 @@ public class ServerThread extends Thread {
 
 					if (command.startsWith("/start")) {
 						if (location == null || location.getHost() != this.username) {
+
 							server.sendPrivately(username,
 									"@Game;Vous n'etes pas l'hote, vous ne pouvez pas lancer la partie.");
 						} else {
+							location.setStatus(Status.STARTED);
+							System.out.println("avant le remove"+server.getRooms().size());
+							server.getRooms().remove(location.getName());
+							System.out.println("apres"
+									+ " le remove"+server.getRooms().size());
+
+							server.sendToSelectionRoom("ROOM "+server.getRooms().keySet());
 							new Thread(new Runnable() {
 
 								@Override
@@ -88,13 +97,21 @@ public class ServerThread extends Thread {
 
 						server.createRoom(roomName, username, maxSize);
 						location = server.getRooms().get(roomName);
+						server.sendRoomNameToUser(location, username);
 						System.out.println("room created");
 
 					} else if (command.startsWith("/join")) {
 
 						String roomName = command.split(" ")[1];
-						server.joinRoom(roomName, username);
-						location = server.getRooms().get(roomName);
+						if (server.getRooms().get(roomName).getStatus().equals(Status.WAITING)) {
+							server.joinRoom(roomName, username);
+							location = server.getRooms().get(roomName);
+						} else {
+							server.sendPrivately(username,
+									"SYSTEM la room que vous souhaitez rejoindre n''existe pas ou n'est plus disponible");
+
+						}
+
 
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
@@ -178,7 +195,8 @@ public class ServerThread extends Thread {
 	}
 
 	/**
-	 * @param location the location to set
+	 * @param location
+	 *            the location to set
 	 */
 	public void setLocation(Room location) {
 		this.location = location;

@@ -434,6 +434,10 @@ public class Server {
 		}
 	}
 
+	public void sendRoomNameToUser(Room room, String username) throws IOException {
+		sendPrivately(username, "@Twilight;" + "Vous etes dans la Room " + room.getName());
+	}
+
 	private boolean witch_Alive(Room room) {
 		for (String player : room.getPlayersAlive()) {
 			if (Role.WITCH.equals(room.getRoleMap().get(player))) {
@@ -599,8 +603,9 @@ public class Server {
 	 * him
 	 * 
 	 * @param room
-	 * @param villageVote : true if it is the village vote (one killed mandatory,
-	 *                    random if nobody votes)
+	 * @param villageVote
+	 *            : true if it is the village vote (one killed mandatory, random if
+	 *            nobody votes)
 	 * @return the name of killed player
 	 */
 	public String eliminate(Room room, boolean villageVote) {
@@ -777,14 +782,16 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection the roomSelection to set
+	 * @param roomSelection
+	 *            the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms the rooms to set
+	 * @param rooms
+	 *            the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;
