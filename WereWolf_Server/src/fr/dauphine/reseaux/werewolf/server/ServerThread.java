@@ -123,6 +123,7 @@ public class ServerThread extends Thread {
 								location = null;
 							} else {
 								server.roomSelection.add(username);
+								server.sendToRoom(location, location.userKey());
 
 							}
 

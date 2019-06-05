@@ -72,7 +72,7 @@ public class Server {
 
 	// Waiting for clients to connect
 	public void waitingForClients() throws IOException, ClassNotFoundException {
-
+ 
 		while (true) {
 			socket = serverSocket.accept();
 
@@ -459,10 +459,6 @@ public class Server {
 
 				}
 				sendToSelectionRoom("ROOM" + rooms.keySet().toString());
-//				this.rooms.remove(location.getName());
-//
-//				location.setHost(null);
-//				location = null;
 
 			}
 
