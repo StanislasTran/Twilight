@@ -119,6 +119,7 @@ public class ServerThread extends Thread {
 								server.getRooms().remove(location.getName());
 							} else {
 								server.roomSelection.add(username);
+								server.sendToRoom(location, location.userKey());
 
 							}
 							location.setHost(null);
