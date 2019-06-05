@@ -91,7 +91,7 @@ public class ClientThread implements Runnable {
 
 
 			if (message.startsWith("SYSTEM")) {
-				Client.displayText.append("Système: "+message.substring(8) );
+				Client.displayText.append("Système: "+message.substring(7) );
 			}
 
 

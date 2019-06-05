@@ -71,12 +71,11 @@ public class ServerThread extends Thread {
 									"@Game;Vous n'etes pas l'hote, vous ne pouvez pas lancer la partie.");
 						} else {
 							location.setStatus(Status.STARTED);
-							System.out.println("avant le remove"+server.getRooms().size());
+							System.out.println("avant le remove" + server.getRooms().size());
 							server.getRooms().remove(location.getName());
-							System.out.println("apres"
-									+ " le remove"+server.getRooms().size());
+							System.out.println("apres" + " le remove" + server.getRooms().size());
 
-							server.sendToSelectionRoom("ROOM "+server.getRooms().keySet());
+							server.sendToSelectionRoom("ROOM " + server.getRooms().keySet());
 							new Thread(new Runnable() {
 
 								@Override
@@ -92,13 +91,22 @@ public class ServerThread extends Thread {
 
 					} else if (command.startsWith("/createRoom")) {
 
-						String roomName = command.split(" ")[1];
-						String maxSize = command.split(" ")[2];
+						try {
+							String roomName = command.split(" ")[1];
+							if (!server.getRooms().containsKey(roomName)) {
+								String maxSize = command.split(" ")[2];
 
-						server.createRoom(roomName, username, maxSize);
-						location = server.getRooms().get(roomName);
-						server.sendRoomNameToUser(location, username);
-						System.out.println("room created");
+								server.createRoom(roomName, username, maxSize);
+								location = server.getRooms().get(roomName);
+								server.sendRoomNameToUser(location, username);
+								System.out.println("room created");
+							}else {
+								server.sendPrivately(username, "SYSTEM \n Ce nom de Room est déjà utilisé");
+
+							}
+						} catch (Exception e) {
+							server.sendPrivately(username, "SYSTEM \n La commande est incorrecte");
+						}
 
 					} else if (command.startsWith("/join")) {
 
@@ -111,7 +119,6 @@ public class ServerThread extends Thread {
 									"SYSTEM la room que vous souhaitez rejoindre n''existe pas ou n'est plus disponible");
 
 						}
-
 
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
@@ -189,8 +196,7 @@ public class ServerThread extends Thread {
 	}
 
 	/**
-	 * @param location
-	 *            the location to set
+	 * @param location the location to set
 	 */
 	public void setLocation(Room location) {
 		this.location = location;
