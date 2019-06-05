@@ -105,11 +105,8 @@ public class Server {
 		for (String userName : roomSelection) {
 			System.out.println("1:" + roomSelection);
 			synchronized (roomSelection) {
-				System.out.println("2okkkk");
 				ObjectOutputStream tempOutput = clients.get(userName);
-				System.out.println("3:::");
 				tempOutput.writeObject(cryptedData);
-				System.out.println("4chu");
 				tempOutput.flush();
 
 			}
@@ -377,6 +374,9 @@ public class Server {
 					if (!"".equals(eliminatedPlayerWolf)) {
 						location.getRoleMap().remove(eliminatedPlayerWolf);
 					}
+					if (!"".equals(eliminatedPlayerWitch)) {
+						location.getRoleMap().remove(eliminatedPlayerWitch);
+					}
 
 					Thread.sleep(DUREE_WAIT);
 
@@ -435,7 +435,7 @@ public class Server {
 	}
 
 	public void sendRoomNameToUser(Room room, String username) throws IOException {
-		sendPrivately(username, "@Twilight;" + "Vous etes dans la Room " + room.getName());
+		sendPrivately(username, "@Game;" + "Vous etes dans la Room " + room.getName());
 	}
 
 	private boolean witch_Alive(Room room) {
@@ -603,9 +603,8 @@ public class Server {
 	 * him
 	 * 
 	 * @param room
-	 * @param villageVote
-	 *            : true if it is the village vote (one killed mandatory, random if
-	 *            nobody votes)
+	 * @param villageVote : true if it is the village vote (one killed mandatory,
+	 *                    random if nobody votes)
 	 * @return the name of killed player
 	 */
 	public String eliminate(Room room, boolean villageVote) {
@@ -658,7 +657,9 @@ public class Server {
 		String userKilledByVillage = eliminate(location, true);
 
 		if (!"".equals(userKilledByVillage)) {
-			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'�tait un(e) "
+
+			
+			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'etait un(e) "
 					+ location.getRoleMap().get(userKilledByVillage));
 			location.getRoleMap().remove(userKilledByVillage);
 
@@ -726,7 +727,6 @@ public class Server {
 				if (!toKill.isEmpty() && room.getPlayersAlive().contains(toKill)) {
 					room.getPlayersAlive().remove(toKill);
 					room.getPlayersDead().add(toKill);
-					room.getRoleMap().remove(toKill);
 					sendPrivately(player, "@Game;" + "Player " + toKill + " killed");
 
 					room.setPlayerWitchToKill("");
@@ -782,16 +782,14 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection
-	 *            the roomSelection to set
+	 * @param roomSelection the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms
-	 *            the rooms to set
+	 * @param rooms the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;

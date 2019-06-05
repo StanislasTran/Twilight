@@ -15,7 +15,7 @@ public class ServerThread extends Thread {
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
 	private String username;
-	String message;
+	private String message;
 	private Room location;
 
 	public ServerThread(Server server, Socket socket) throws IOException, ClassNotFoundException {
