@@ -11,9 +11,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import javax.swing.JButton;
@@ -35,7 +38,7 @@ import javax.swing.border.TitledBorder;
 public class Client {
 
 	// TESTS
-	private final static boolean TEST = true;
+	private final static boolean TEST = false;
 
 	// Globals
 	private static ClientThread clientThread;
@@ -84,10 +87,13 @@ public class Client {
 
 	public static final String ipServer = "25.31.163.176";
 
-	public static void Connect() {
+	private static List<String> serverUsersConnected = new ArrayList<String>();
 
+	@SuppressWarnings("unchecked")
+	public static void preConnect() {
 		try {
 			if (localhost) {
+
 				SOCK = new Socket(InetAddress.getLocalHost(), port);
 			} else {
 				SOCK = new Socket(InetAddress.getByName(ipServer), port);
@@ -97,25 +103,40 @@ public class Client {
 
 			// sending UserName
 			output = new ObjectOutputStream(SOCK.getOutputStream());
-			try {
 
-				output.writeObject(userName);
-				System.out.println(userName);
-				output.flush();
-			} catch (IOException ioException) {
-				JOptionPane.showMessageDialog(null, "Error - UserName not Sent!");
+			clientThread.in = new ObjectInputStream(SOCK.getInputStream());
+
+			// waiting for list of users connected
+			String tmp = (String) clientThread.in.readObject();
+			// toString of a Set
+			tmp = tmp.replaceAll("[\\[\\]]", "");
+
+			for (String user : tmp.split(", ")) {
+				serverUsersConnected.add(user);
 			}
-
-			top.setText("Online");
-
-			Thread X = new Thread(clientThread);
-			X.start();
 
 		} catch (Exception x) {
 			System.out.println(x);
 			JOptionPane.showMessageDialog(null, "Server Not Responding");
 			System.exit(0);
 		}
+	}
+
+	public static void Connect() {
+		try {
+
+			output.writeObject(userName);
+			System.out.println(userName);
+			output.flush();
+		} catch (IOException ioException) {
+			JOptionPane.showMessageDialog(null, "Error - UserName not Sent!");
+		}
+
+		top.setText("Online");
+
+		Thread X = new Thread(clientThread);
+		X.start();
+
 	}
 
 	public static void BuildMainWindow() {
@@ -300,6 +321,7 @@ public class Client {
 	}
 
 	public static void Initialize() {
+		preConnect();
 		submit.setEnabled(false);
 		mainWindow.setEnabled(false);
 	}
@@ -344,7 +366,11 @@ public class Client {
 		logInEnter.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				LOGIN_ACTION();
+				if (!serverUsersConnected.contains(logInUsernameBox.getText().trim())) {
+					LOGIN_ACTION();
+				} else {
+					BuildPopUpWindow("Username already taken");
+				}
 			}
 
 		});

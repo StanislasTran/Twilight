@@ -27,6 +27,8 @@ public class ServerThread extends Thread {
 		output.flush();
 		input = new ObjectInputStream(this.socket.getInputStream());
 
+		output.writeObject(server.clients.keySet().toString());
+
 		username = (String) input.readObject();
 
 		server.clients.put(username, output);
