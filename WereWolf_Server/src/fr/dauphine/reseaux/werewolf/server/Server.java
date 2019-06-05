@@ -103,7 +103,6 @@ public class Server {
 	public void sendToSelectionRoom(String data) throws IOException {
 		String cryptedData = AES.encrypt(data);
 		for (String userName : roomSelection) {
-			System.out.println("1:" + roomSelection);
 			synchronized (roomSelection) {
 				ObjectOutputStream tempOutput = clients.get(userName);
 				tempOutput.writeObject(cryptedData);
@@ -130,6 +129,30 @@ public class Server {
 					tempOutput.flush();
 				}
 
+			}
+		}
+	}
+
+	/**
+	 * send the data to all user in the Room room
+	 * 
+	 * @param data
+	 * @throws IOException
+	 */
+	public void sendToDeadRoom(Room room, String data) throws IOException {
+		String cryptedData = AES.encrypt(data);
+
+		for (String userName : room.getUsers()) {
+			if (room.getPlayersDead().contains(userName)) {
+
+				synchronized (clients) {
+					ObjectOutputStream tempOutput = clients.get(userName);
+					if (tempOutput != null) {
+						tempOutput.writeObject(cryptedData);
+						tempOutput.flush();
+					}
+
+				}
 			}
 		}
 	}
@@ -166,6 +189,17 @@ public class Server {
 		ObjectOutputStream tempOutput = clients.get(username);
 		tempOutput.writeObject(cryptedMessage);
 		tempOutput.flush();
+
+	}
+
+	// Wolves chat
+	public void sendToWolves(Room room, ArrayList<String> usersAlive, String message, String myUsername)
+			throws IOException {
+		for (String user : usersAlive) {
+			if (room.getRoleMap().get(user).equals(Role.WOLF)) {
+				sendPrivately(user, "@Wolf;" + myUsername + ";" + message);
+			}
+		}
 
 	}
 
@@ -251,6 +285,7 @@ public class Server {
 					 * 
 					 */
 					if (!first_turn) {
+						sendToRoom(location, "@ROLETURN;VILLAGER");
 						location.setRoleTurn(Role.VILLAGER);
 
 						sendToRoom(location, "@Timing;" + "Villagers turn");
@@ -277,6 +312,7 @@ public class Server {
 					 * 
 					 */
 					location.setRoleTurn(Role.WOLF);
+					sendToRoom(location, "@ROLETURN;WOLF");
 
 					sendToRoom(location, "@Narrator;"
 							+ "Les loups-garous se reveillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
@@ -285,11 +321,11 @@ public class Server {
 
 					String eliminatedPlayerWolf = eliminate(location, false);
 
-//					if (location.getUsers().size() <= 3) {
-//						if (!"".equals(eliminatedPlayerWolf)) {
-//							location.getRoleMap().remove(eliminatedPlayerWolf);
-//						}
-//					}
+					// if (location.getUsers().size() <= 3) {
+					// if (!"".equals(eliminatedPlayerWolf)) {
+					// location.getRoleMap().remove(eliminatedPlayerWolf);
+					// }
+					// }
 
 					sendToRoom(location, "@Narrator;" + "Les loups-garous se rendorment.");
 					Thread.sleep(DUREE_WAIT);
@@ -312,9 +348,11 @@ public class Server {
 							// des
 							// alives s'il est ressuscite
 							if (!"".equals(eliminatedPlayerWolf)) {
+								sendToRoom(location, "@ROLETURN;WITCH_SAVE");
 								eliminatedPlayerWolf = sendDeadPlayerToWitch(location);
 							}
 							if (!gameFinished(location)) {
+								sendToRoom(location, "@ROLETURN;WITCH_KILL");
 								eliminatedPlayerWitch = witchKillManagement(location);
 							}
 
@@ -412,16 +450,16 @@ public class Server {
 			}
 
 			if (winner(location) != null) {
-				System.out.println("lejeu prend fin");
+				System.out.println("le jeu prend fin");
 
+				sendToRoom(location, "@ROLETURN;");
 				sendToRoom(location, "@END " + winner(location));
 				for (String user : location.getUsers()) {
 					this.roomSelection.add(user);
 
 				}
-				System.out.println("room keyset" + rooms.keySet().toString());
 				sendToSelectionRoom("ROOM" + rooms.keySet().toString());
-				
+
 			}
 
 		} catch (IOException e) {
@@ -519,8 +557,9 @@ public class Server {
 		if (nbPlayer == 3) {
 
 			roles.add(Role.WOLF);
+			roles.add(Role.WOLF);
 			roles.add(Role.VILLAGER);
-			roles.add(Role.VILLAGER);
+			// roles.add(Role.VILLAGER);
 		}
 
 		if (nbPlayer == 4) {
@@ -598,8 +637,9 @@ public class Server {
 	 * him
 	 * 
 	 * @param room
-	 * @param villageVote : true if it is the village vote (one killed mandatory,
-	 *                    random if nobody votes)
+	 * @param villageVote
+	 *            : true if it is the village vote (one killed mandatory, random if
+	 *            nobody votes)
 	 * @return the name of killed player
 	 */
 	public String eliminate(Room room, boolean villageVote) {
@@ -653,8 +693,8 @@ public class Server {
 
 		if (!"".equals(userKilledByVillage)) {
 
-			
 			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'etait un(e) "
+
 					+ location.getRoleMap().get(userKilledByVillage));
 			location.getRoleMap().remove(userKilledByVillage);
 
@@ -777,14 +817,16 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection the roomSelection to set
+	 * @param roomSelection
+	 *            the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms the rooms to set
+	 * @param rooms
+	 *            the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;

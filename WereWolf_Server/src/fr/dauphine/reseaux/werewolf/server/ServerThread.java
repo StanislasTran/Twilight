@@ -19,7 +19,6 @@ public class ServerThread extends Thread {
 	private Room location;
 
 	public ServerThread(Server server, Socket socket) throws IOException, ClassNotFoundException {
-		// TODO Auto-generated constructor stub
 		this.server = server;
 		this.socket = socket;
 
@@ -46,7 +45,6 @@ public class ServerThread extends Thread {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public void run() {
 
 		try {
@@ -64,16 +62,36 @@ public class ServerThread extends Thread {
 
 					String command = tabMsg[2];
 
-					if (command.startsWith("/start")) {
+					if (location != null && location.getPlayersDead().contains(username)
+							&& !server.roomSelection.contains(username)) {
+						if (command.startsWith("/")) {
+							server.sendPrivately(username,
+									"@Game;Vous etes morts. Vous ne pouvez plus effecter d'actions.");
+						} else {
+							String newmsg = "";
+							newmsg += tabMsg[0] + ";";
+							newmsg += "<Dead> " + tabMsg[1] + ";";
+							newmsg += tabMsg[2];
+
+							server.sendToDeadRoom(location, newmsg);
+						}
+
+					} else if (command.startsWith("/start")) {
+
+						if (server.roomSelection.contains(username)) {
+							server.sendPrivately(username, "@Game;Veuillez creer une room pour lancer la partie.");
+						}
 						if (location == null || location.getHost() != this.username) {
 
 							server.sendPrivately(username,
 									"@Game;Vous n'etes pas l'hote, vous ne pouvez pas lancer la partie.");
+						} else if (location.getStatus().equals(Status.STARTED)) {
+							server.sendPrivately(username,
+									"@Game;Vous ne pouvez pas utiliser cette commande, le jeu a deja debute.");
 						} else {
 							location.setStatus(Status.STARTED);
-							System.out.println("avant le remove" + server.getRooms().size());
+							server.sendToRoom(location, "@ROLETURN;ROOM");
 							server.getRooms().remove(location.getName());
-							System.out.println("apres" + " le remove" + server.getRooms().size());
 
 							server.sendToSelectionRoom("ROOM " + server.getRooms().keySet());
 							new Thread(new Runnable() {
@@ -91,8 +109,7 @@ public class ServerThread extends Thread {
 					} else if (command.startsWith("/back")) {
 						if (server.getRoomSelection().contains(username)) {
 							server.sendPrivately(username, "SYSTEM Vous êtes déjà dans la selectionRoom");
-						}
-						if (this.location.getStatus().equals(Status.WAITING)) {
+						} else if (this.location.getStatus().equals(Status.WAITING)) {
 
 							if (location.getHost().equals(username)) {
 								for (String user : location.getUsers()) {
@@ -117,81 +134,125 @@ public class ServerThread extends Thread {
 						}
 
 					} else if (command.startsWith("/createRoom")) {
+						if (!server.roomSelection.contains(username)) {
+							server.sendPrivately(username,
+									"@Game;Vous ne pouvez pas utiliser cette commande, vous etes deja dans une room.");
+						} else {
+							try {
+								String roomName = command.split(" ")[1];
+								if (!server.getRooms().containsKey(roomName)) {
+									String maxSize = command.split(" ")[2];
 
-						try {
+									server.createRoom(roomName, username, maxSize);
+									location = server.getRooms().get(roomName);
+									server.sendRoomNameToUser(location, username);
+									System.out.println("room created");
+								} else {
+									server.sendPrivately(username, "SYSTEM \n Ce nom de Room est déjà utilisé");
+
+								}
+							} catch (Exception e) {
+								server.sendPrivately(username, "SYSTEM \n La commande est incorrecte");
+							}
+						}
+					} else if (command.startsWith("/join")) {
+						if (!server.roomSelection.contains(username)) {
+							server.sendPrivately(username,
+									"@Game;Vous ne pouvez pas utiliser cette commande, vous etes deja dans une room.");
+						} else {
+
 							String roomName = command.split(" ")[1];
-							if (!server.getRooms().containsKey(roomName)) {
-								String maxSize = command.split(" ")[2];
-
-								server.createRoom(roomName, username, maxSize);
+							if (server.getRooms().get(roomName).getStatus().equals(Status.WAITING)) {
+								server.joinRoom(roomName, username);
 								location = server.getRooms().get(roomName);
 								server.sendRoomNameToUser(location, username);
-								System.out.println("room created");
 							} else {
-								server.sendPrivately(username, "SYSTEM \n Ce nom de Room est déjà utilisé");
-
-							}
-						} catch (Exception e) {
-							server.sendPrivately(username, "SYSTEM \n La commande est incorrecte");
-						}
-
-					} else if (command.startsWith("/join")) {
-
-						String roomName = command.split(" ")[1];
-						if (server.getRooms().get(roomName).getStatus().equals(Status.WAITING)) {
-							server.joinRoom(roomName, username);
-							location = server.getRooms().get(roomName);
-						} else {
-							server.sendPrivately(username,
-									"SYSTEM la room que vous souhaitez rejoindre n''existe pas ou n'est plus disponible");
-
-						}
-
-					} else if (command.startsWith("/vote")) {
-						String vote = command.split(" ")[1];
-
-						if (location.getRoleTurn().equals(Role.WOLF)) {
-							if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
 								server.sendPrivately(username,
-										"@Game;Vous n'etes pas loups-garou, vous ne pouvez pas voter.");
-							} else {
-								server.vote(location, username, vote);
+										"SYSTEM la room que vous souhaitez rejoindre n''existe pas ou n'est plus disponible");
 							}
-						} else if (location.getRoleTurn().equals(Role.VILLAGER)) {
-							server.vote(location, username, vote);
+						}
+					} else if (command.startsWith("/vote")) {
+						if (server.roomSelection.contains(username)) {
+							server.sendPrivately(username,
+									"@Game;Vous ne pouvez pas utiliser cette commande, vous n'etes pas dans une room.");
 						} else {
-							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
+
+							String vote = command.split(" ")[1];
+
+							if (location.getRoleTurn().equals(Role.WOLF)) {
+								if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
+									server.sendPrivately(username,
+											"@Game;Vous n'etes pas loups-garou, vous ne pouvez pas voter.");
+								} else {
+									server.vote(location, username, vote);
+								}
+							} else if (location.getRoleTurn().equals(Role.VILLAGER)) {
+								server.vote(location, username, vote);
+							} else {
+								server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
+							}
 						}
 					} else if (command.startsWith("/witch_save")) {
 
-						if (location.getRoleTurn().equals(Role.WITCH)) {
-							if (!location.getRoleMap().get(username).equals(Role.WITCH)) {
-								server.sendPrivately(username,
-										"@Game;Vous n'etes pas la sorciere, vous ne pouvez pas voter.");
-							} else {
-								if (command.split(" ") != null && command.split(" ").length > 1) {
-									String vote = command.split(" ")[1];
-									server.resultWitchSave(location, username, vote);
-								}
-							}
+						if (server.roomSelection.contains(username)) {
+							server.sendPrivately(username,
+									"@Game;Vous ne pouvez pas utiliser cette commande, vous n'etes pas dans une room.");
 						} else {
-							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
+
+							if (location.getRoleTurn().equals(Role.WITCH)) {
+								if (!location.getRoleMap().get(username).equals(Role.WITCH)) {
+									server.sendPrivately(username,
+											"@Game;Vous n'etes pas la sorciere, vous ne pouvez pas voter.");
+								} else {
+									if (command.split(" ") != null && command.split(" ").length > 1) {
+										String vote = command.split(" ")[1];
+										server.resultWitchSave(location, username, vote);
+									}
+								}
+							} else {
+								server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
+							}
 						}
 
 					} else if (command.startsWith("/witch_kill")) {
-						if (location.getRoleTurn().equals(Role.WITCH)) {
-							if (!location.getRoleMap().get(username).equals(Role.WITCH)) {
+						if (server.roomSelection.contains(username)) {
+							server.sendPrivately(username,
+									"@Game;Vous ne pouvez pas utiliser cette commande, vous n'etes pas dans une room.");
+						} else {
+
+							if (location.getRoleTurn().equals(Role.WITCH)) {
+								if (!location.getRoleMap().get(username).equals(Role.WITCH)) {
+									server.sendPrivately(username,
+											"@Game;Vous n'etes pas sorciere, vous ne pouvez pas voter.");
+								} else {
+									if (command.split(" ") != null && command.split(" ").length > 1) {
+										String playername = command.split(" ")[1];
+										server.resultWitchKill(location, username, playername);
+									}
+								}
+							} else {
+								server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
+							}
+						}
+
+					} else if (command.startsWith("/wolf")) {
+						if (location.getRoleTurn().equals(Role.WOLF)) {
+							if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
 								server.sendPrivately(username,
-										"@Game;Vous n'etes pas sorciere, vous ne pouvez pas voter.");
+										"@Game;Vous n'etes pas loup-garou, vous ne pouvez pas voter.");
 							} else {
 								if (command.split(" ") != null && command.split(" ").length > 1) {
-									String playername = command.split(" ")[1];
-									server.resultWitchKill(location, username, playername);
+									String wolfMessage = command.split(" ")[1];
+									// String wolfMessage = command;
+									System.out.println(wolfMessage);
+									System.out.println(location.getPlayersAlive());
+									server.sendToWolves(location, location.getPlayersAlive(), wolfMessage, username);
 								}
 							}
 						} else {
 							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
 						}
+						// case où on veut juste envoyer un message
 
 					} else {
 						if (server.getRoomSelection().contains(username)) {
@@ -202,11 +263,6 @@ public class ServerThread extends Thread {
 						}
 					}
 
-				} else {
-					String formattedMsg = "@" + username + message.toString().substring(message.toString().indexOf(':'),
-							message.toString().length());
-					server.sendPrivately(message.toString().substring(1, message.toString().indexOf(':')),
-							formattedMsg);
 				}
 			}
 		} catch (IOException e) {

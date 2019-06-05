@@ -38,7 +38,7 @@ import javax.swing.border.TitledBorder;
 public class Client {
 
 	// TESTS
-	private final static boolean TEST = true;
+	private final static boolean TEST = false;
 
 	// Globals
 	private static ClientThread clientThread;
@@ -83,11 +83,15 @@ public class Client {
 	// NETWORK
 	public static final int port = 2620;
 
-	public static final boolean localhost = true;
+	public static final boolean localhost = false;
 
 	public static final String ipServer = "25.31.163.176";
 
 	private static List<String> serverUsersConnected = new ArrayList<String>();
+
+	// GAME
+
+	public static String roleTurn = "";
 
 	@SuppressWarnings("unchecked")
 	public static void preConnect() {
@@ -299,7 +303,26 @@ public class Client {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					typeText.setText("@" + selectedUser + ": ");
+					switch (roleTurn) {
+					case "ROOM":
+						typeText.setText("Salut " + selectedUser);
+						break;
+					case "WOLF":
+						typeText.setText("/vote " + selectedUser);
+						break;
+					case "WITCH_SAVE":
+						typeText.setText("/witch_save yes");
+						break;
+					case "WITCH_KILL":
+						typeText.setText("/witch_kill " + selectedUser);
+						break;
+					case "VILLAGER":
+						typeText.setText("/vote " + selectedUser);
+						break;
+					default:
+						typeText.setText("/join " + selectedUser);
+
+					}
 					typeText.requestFocus();
 				}
 			});
