@@ -438,7 +438,7 @@ public class Server {
 	}
 
 	public void sendRoomNameToUser(Room room, String username) throws IOException {
-		sendPrivately(username, "@Twilight;" + "Vous etes dans la Room " + room.getName());
+		sendPrivately(username, "@Game;" + "Vous etes dans la Room " + room.getName());
 	}
 
 	private boolean witch_Alive(Room room) {
