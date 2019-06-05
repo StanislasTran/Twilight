@@ -502,7 +502,20 @@ public class Server {
 			roles.add(Role.VILLAGER);
 			roles.add(Role.VILLAGER);
 		}
-		if (nbPlayer > 3) {
+
+		if (nbPlayer == 4) {
+
+			int nbVillageois = nbPlayer - 2;
+
+			for (int i = 0; i < nbVillageois; i++) {
+				roles.add(Role.VILLAGER);
+
+			}
+			roles.add(Role.WOLF);
+			roles.add(Role.WITCH);
+		}
+
+		if (nbPlayer >= 10) {
 
 			int nbVillageois = (int) (nbPlayer * (0.75));
 			int nbLoup = nbPlayer - nbVillageois - 1;

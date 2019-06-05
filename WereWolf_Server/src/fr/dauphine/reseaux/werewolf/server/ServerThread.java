@@ -66,7 +66,7 @@ public class ServerThread extends Thread {
 					if (command.startsWith("/start")) {
 						if (location == null || location.getHost() != this.username) {
 							server.sendPrivately(username,
-									"@Game;Vous n'êtes pas l'hote, vous ne pouvez pas lancer la partie.");
+									"@Game;Vous n'etes pas l'hote, vous ne pouvez pas lancer la partie.");
 						} else {
 							new Thread(new Runnable() {
 
