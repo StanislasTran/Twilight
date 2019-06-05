@@ -62,7 +62,8 @@ public class ServerThread extends Thread {
 
 					String command = tabMsg[2];
 
-					if (location != null && location.getPlayersDead().contains(username)) {
+					if (location != null && location.getPlayersDead().contains(username)
+							&& !server.roomSelection.contains(username)) {
 						if (command.startsWith("/")) {
 							server.sendPrivately(username,
 									"@Game;Vous etes morts. Vous ne pouvez plus effecter d'actions.");
@@ -76,6 +77,10 @@ public class ServerThread extends Thread {
 						}
 
 					} else if (command.startsWith("/start")) {
+
+						if (server.roomSelection.contains(username)) {
+							server.sendPrivately(username, "@Game;Veuillez creer une room pour lancer la partie.");
+						}
 						if (location == null || location.getHost() != this.username) {
 
 							server.sendPrivately(username,
@@ -104,8 +109,7 @@ public class ServerThread extends Thread {
 					} else if (command.startsWith("/back")) {
 						if (server.getRoomSelection().contains(username)) {
 							server.sendPrivately(username, "SYSTEM Vous êtes déjà dans la selectionRoom");
-						}
-						if (this.location.getStatus().equals(Status.WAITING)) {
+						} else if (this.location.getStatus().equals(Status.WAITING)) {
 
 							if (location.getHost().equals(username)) {
 								for (String user : location.getUsers()) {
@@ -130,7 +134,7 @@ public class ServerThread extends Thread {
 						}
 
 					} else if (command.startsWith("/createRoom")) {
-						if (location != null) {
+						if (!server.roomSelection.contains(username)) {
 							server.sendPrivately(username,
 									"@Game;Vous ne pouvez pas utiliser cette commande, vous etes deja dans une room.");
 						} else {
@@ -152,7 +156,7 @@ public class ServerThread extends Thread {
 							}
 						}
 					} else if (command.startsWith("/join")) {
-						if (location != null) {
+						if (!server.roomSelection.contains(username)) {
 							server.sendPrivately(username,
 									"@Game;Vous ne pouvez pas utiliser cette commande, vous etes deja dans une room.");
 						} else {
@@ -169,7 +173,7 @@ public class ServerThread extends Thread {
 						}
 
 					} else if (command.startsWith("/vote")) {
-						if (location == null) {
+						if (server.roomSelection.contains(username)) {
 							server.sendPrivately(username,
 									"@Game;Vous ne pouvez pas utiliser cette commande, vous n'etes pas dans une room.");
 						} else {
@@ -191,7 +195,7 @@ public class ServerThread extends Thread {
 						}
 					} else if (command.startsWith("/witch_save")) {
 
-						if (location == null) {
+						if (server.roomSelection.contains(username)) {
 							server.sendPrivately(username,
 									"@Game;Vous ne pouvez pas utiliser cette commande, vous n'etes pas dans une room.");
 						} else {
@@ -212,7 +216,7 @@ public class ServerThread extends Thread {
 						}
 
 					} else if (command.startsWith("/witch_kill")) {
-						if (location == null) {
+						if (server.roomSelection.contains(username)) {
 							server.sendPrivately(username,
 									"@Game;Vous ne pouvez pas utiliser cette commande, vous n'etes pas dans une room.");
 						} else {

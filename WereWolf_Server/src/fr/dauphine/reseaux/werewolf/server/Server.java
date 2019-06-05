@@ -441,17 +441,17 @@ public class Server {
 			if (winner(location) != null) {
 				System.out.println("le jeu prend fin");
 
+				sendToRoom(location, "@ROLETURN;");
 				sendToRoom(location, "@END " + winner(location));
 				for (String user : location.getUsers()) {
 					this.roomSelection.add(user);
 
 				}
 				sendToSelectionRoom("ROOM" + rooms.keySet().toString());
-				/*
-				 * this.rooms.remove(location.getName());
-				 * 
-				 * location.setHost(null); location = null;
-				 */
+//				this.rooms.remove(location.getName());
+//
+//				location.setHost(null);
+//				location = null;
 
 			}
 
@@ -684,7 +684,6 @@ public class Server {
 
 		if (!"".equals(userKilledByVillage)) {
 
-			
 			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'etait un(e) "
 					+ location.getRoleMap().get(userKilledByVillage));
 			location.getRoleMap().remove(userKilledByVillage);
