@@ -103,7 +103,6 @@ public class Server {
 	public void sendToSelectionRoom(String data) throws IOException {
 		String cryptedData = AES.encrypt(data);
 		for (String userName : roomSelection) {
-			System.out.println("1:" + roomSelection);
 			synchronized (roomSelection) {
 				ObjectOutputStream tempOutput = clients.get(userName);
 				tempOutput.writeObject(cryptedData);
@@ -130,6 +129,30 @@ public class Server {
 					tempOutput.flush();
 				}
 
+			}
+		}
+	}
+
+	/**
+	 * send the data to all user in the Room room
+	 * 
+	 * @param data
+	 * @throws IOException
+	 */
+	public void sendToDeadRoom(Room room, String data) throws IOException {
+		String cryptedData = AES.encrypt(data);
+
+		for (String userName : room.getUsers()) {
+			if (room.getPlayersDead().contains(userName)) {
+
+				synchronized (clients) {
+					ObjectOutputStream tempOutput = clients.get(userName);
+					if (tempOutput != null) {
+						tempOutput.writeObject(cryptedData);
+						tempOutput.flush();
+					}
+
+				}
 			}
 		}
 	}
@@ -251,6 +274,7 @@ public class Server {
 					 * 
 					 */
 					if (!first_turn) {
+						sendToRoom(location, "@ROLETURN;VILLAGER");
 						location.setRoleTurn(Role.VILLAGER);
 
 						sendToRoom(location, "@Timing;" + "Villagers turn");
@@ -277,6 +301,7 @@ public class Server {
 					 * 
 					 */
 					location.setRoleTurn(Role.WOLF);
+					sendToRoom(location, "@ROLETURN;WOLF");
 
 					sendToRoom(location, "@Narrator;"
 							+ "Les loups-garous se reveillent et choisissent leur cible ('/vote PSEUDO' pour voter contre la cible)");
@@ -312,9 +337,11 @@ public class Server {
 							// des
 							// alives s'il est ressuscite
 							if (!"".equals(eliminatedPlayerWolf)) {
+								sendToRoom(location, "@ROLETURN;WITCH_SAVE");
 								eliminatedPlayerWolf = sendDeadPlayerToWitch(location);
 							}
 							if (!gameFinished(location)) {
+								sendToRoom(location, "@ROLETURN;WITCH_KILL");
 								eliminatedPlayerWitch = witchKillManagement(location);
 							}
 
@@ -412,14 +439,13 @@ public class Server {
 			}
 
 			if (winner(location) != null) {
-				System.out.println("lejeu prend fin");
+				System.out.println("le jeu prend fin");
 
 				sendToRoom(location, "@END " + winner(location));
 				for (String user : location.getUsers()) {
 					this.roomSelection.add(user);
 
 				}
-				System.out.println("room keyset" + rooms.keySet().toString());
 				sendToSelectionRoom("ROOM" + rooms.keySet().toString());
 				/*
 				 * this.rooms.remove(location.getName());

@@ -54,14 +54,11 @@ public class ClientThread implements Runnable {
 			System.out.println(message + " decrypted");
 
 			if (message.startsWith("ROOM")) {
-				System.out.println(message);
 				String temp1 = message.substring(4);
 				temp1 = temp1.replace("[", "");
 				temp1 = temp1.replace("]", "");
 
-				currentUsers = temp1.split(", ");
-				System.out.println(currentUsers[0]);
-				// Arrays.sort(currentUsers);
+				currentUsers = temp1.split(", "); // Arrays.sort(currentUsers);
 
 				try {
 
@@ -69,7 +66,6 @@ public class ClientThread implements Runnable {
 						@Override
 						public void run() {
 							Client.userOnlineList.setListData(currentUsers);
-							System.out.println(currentUsers[0] + "3");
 
 						}
 					});
@@ -78,7 +74,11 @@ public class ClientThread implements Runnable {
 				}
 			}
 
-			if (message.startsWith("@END")) {
+			if (message.startsWith("@ROLETURN")) {
+				String temp = message.split(";")[1];
+
+				Client.roleTurn = temp;
+			} else if (message.startsWith("@END")) {
 
 				Client.displayText.setText("");
 				Client.top.setText("");
@@ -224,19 +224,9 @@ public class ClientThread implements Runnable {
 
 	public void SEND(final String str) throws IOException {
 		String writeStr;
-		if (str.startsWith("@")) {
-			SwingUtilities.invokeLater(new Runnable() {
 
-				@Override
-				public void run() {
-					// TODO Auto-generated method stub
-					Client.displayText.append("\n" + Client.userName + ": " + str);
-				}
+		writeStr = "@EE@;" + Client.userName + ";" + str;
 
-			});
-			writeStr = str;
-		} else
-			writeStr = "@EE@;" + Client.userName + ";" + str;
 		String encryptedMessage = AES.encrypt(writeStr);
 
 		Client.output.writeObject(encryptedMessage);
