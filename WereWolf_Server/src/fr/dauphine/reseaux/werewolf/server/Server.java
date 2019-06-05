@@ -103,9 +103,13 @@ public class Server {
 	public void sendToSelectionRoom(String data) throws IOException {
 		String cryptedData = AES.encrypt(data);
 		for (String userName : roomSelection) {
+			System.out.println("1:" + roomSelection);
 			synchronized (roomSelection) {
+				System.out.println("2okkkk");
 				ObjectOutputStream tempOutput = clients.get(userName);
+				System.out.println("3:::");
 				tempOutput.writeObject(cryptedData);
+				System.out.println("4chu");
 				tempOutput.flush();
 
 			}
@@ -226,7 +230,7 @@ public class Server {
 	// GAME METHODS
 
 	public void startGame(Room location) throws InterruptedException {
-
+		Set<String> displayUsers = new HashSet<>(location.getUsers());
 		location.setSeerPower(true);
 		location.setWitchPower(true);
 		try {
@@ -360,15 +364,14 @@ public class Server {
 
 					sendToRoom(location, "@Timing;" + "Villagers turn");
 
-					Set<String> currentUsers = location.getUsers();
 					if (!eliminatedPlayerWolf.equals("")) {
-						currentUsers.remove(eliminatedPlayerWolf);
-						currentUsers.add(eliminatedPlayerWolf + " <Dead>");
+						displayUsers.remove(eliminatedPlayerWolf);
+						displayUsers.add(eliminatedPlayerWolf + " <Dead>");
 						sendToRoom(location, "!" + location.getUsers());
 					}
 					if (!eliminatedPlayerWitch.equals("")) {
-						currentUsers.remove(eliminatedPlayerWitch);
-						currentUsers.add(eliminatedPlayerWitch + " <Dead>");
+						displayUsers.remove(eliminatedPlayerWitch);
+						displayUsers.add(eliminatedPlayerWitch + " <Dead>");
 						sendToRoom(location, "!" + location.getUsers());
 					}
 
@@ -382,9 +385,29 @@ public class Server {
 
 			if (winner(location).equals(Role.WOLF)) {
 				sendToRoom(location, "@Narrator;Les loups-garous ont gagne !");
+
 			} else {
 				sendToRoom(location, "@Narrator;Les villageois ont gagne ! Vive le village de Thiercelieux");
 			}
+
+			if (winner(location) != null) {
+				System.out.println("lejeu prend fin");
+
+				sendToRoom(location, "@END " + winner(location));
+				for (String user : location.getUsers()) {
+					this.roomSelection.add(user);
+
+				}
+				System.out.println("room keyset" + rooms.keySet().toString());
+				sendToSelectionRoom("ROOM" + rooms.keySet().toString());
+				/*
+				 * this.rooms.remove(location.getName());
+				 * 
+				 * location.setHost(null); location = null;
+				 */
+
+			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
