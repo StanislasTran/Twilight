@@ -90,7 +90,8 @@ public class ClientThread implements Runnable {
 			}
 
 			if (message.startsWith("SYSTEM")) {
-				Client.displayText.append("Système: " + message.substring(8));
+
+				Client.displayText.append("Système: " + message.substring(7));
 			}
 
 			if (message.startsWith("!")) {
@@ -156,19 +157,6 @@ public class ClientThread implements Runnable {
 					}
 				});
 
-			} else if (message.startsWith("@Twilight")) {
-				final String temp2 = message.split(";")[1];
-
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						Client.displayText.setText("");
-						Client.displayText.append("\n");
-						Client.displayText.append("\n" + "TWILIGHT >  " + temp2);
-
-					}
-				});
-
 			} else if (message.startsWith("@Game")) {
 				final String temp2 = message.split(";")[1];
 
@@ -179,7 +167,7 @@ public class ClientThread implements Runnable {
 						// Client.displayText.append("\n \n \n \n\n\n\n\n\n");
 						// DefaultCaret caret = (DefaultCaret) Client.displayText.getCaret();
 						// caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-						Client.displayText.append("\n" + "ATTENTION >  " + temp2);
+						Client.displayText.append("\n" + "Info >  " + temp2);
 
 					}
 				});

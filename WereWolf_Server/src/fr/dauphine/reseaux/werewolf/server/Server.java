@@ -384,6 +384,9 @@ public class Server {
 					if (!"".equals(eliminatedPlayerWolf)) {
 						location.getRoleMap().remove(eliminatedPlayerWolf);
 					}
+					if (!"".equals(eliminatedPlayerWitch)) {
+						location.getRoleMap().remove(eliminatedPlayerWitch);
+					}
 
 					Thread.sleep(DUREE_WAIT);
 
@@ -442,7 +445,7 @@ public class Server {
 	}
 
 	public void sendRoomNameToUser(Room room, String username) throws IOException {
-		sendPrivately(username, "@Twilight;" + "Vous etes dans la Room " + room.getName());
+		sendPrivately(username, "@Game;" + "Vous etes dans la Room " + room.getName());
 	}
 
 	private boolean witch_Alive(Room room) {
@@ -666,7 +669,9 @@ public class Server {
 		String userKilledByVillage = eliminate(location, true);
 
 		if (!"".equals(userKilledByVillage)) {
-			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'�tait un(e) "
+
+			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'etait un(e) "
+
 					+ location.getRoleMap().get(userKilledByVillage));
 			location.getRoleMap().remove(userKilledByVillage);
 
@@ -734,7 +739,6 @@ public class Server {
 				if (!toKill.isEmpty() && room.getPlayersAlive().contains(toKill)) {
 					room.getPlayersAlive().remove(toKill);
 					room.getPlayersDead().add(toKill);
-					room.getRoleMap().remove(toKill);
 					sendPrivately(player, "@Game;" + "Player " + toKill + " killed");
 
 					room.setPlayerWitchToKill("");
