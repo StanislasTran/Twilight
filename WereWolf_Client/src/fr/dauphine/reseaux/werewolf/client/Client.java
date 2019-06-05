@@ -38,7 +38,7 @@ import javax.swing.border.TitledBorder;
 public class Client {
 
 	// TESTS
-	private final static boolean TEST = false;
+	private final static boolean TEST = true;
 
 	// Globals
 	private static ClientThread clientThread;
@@ -335,7 +335,7 @@ public class Client {
 		if (TEST) {
 			Random rand = new Random();
 
-			logInUsernameBox.setText("Client_" + rand.nextInt(100000));
+			logInUsernameBox.setText(String.valueOf(rand.nextInt(1000)));
 			LOGIN_ACTION();
 		} else {
 			logInWindow.setVisible(true);
