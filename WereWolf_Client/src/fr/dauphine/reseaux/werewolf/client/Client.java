@@ -390,6 +390,7 @@ public class Client {
 			submit.setEnabled(true);
 			mainWindow.setEnabled(true);
 			typeText.requestFocus();
+			displayText.append("\n" + "You are in the room select");
 			Connect();
 		} else {
 			JOptionPane.showMessageDialog(null, "Please Enter a name (without spaces)!");

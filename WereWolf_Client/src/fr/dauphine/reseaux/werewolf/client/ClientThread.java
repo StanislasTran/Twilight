@@ -91,7 +91,7 @@ public class ClientThread implements Runnable {
 
 
 			if (message.startsWith("SYSTEM")) {
-				Client.displayText.append("Système: "+message.substring(8) );
+				Client.displayText.append("Système: "+message.substring(7) );
 			}
 
 
@@ -152,6 +152,7 @@ public class ClientThread implements Runnable {
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
+						Client.displayText.setText("");
 						Client.displayText.append("\n");
 						Client.displayText.append("\n" + "TWILIGHT >  " + temp2);
 
