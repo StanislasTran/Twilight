@@ -102,9 +102,13 @@ public class Server {
 	public void sendToSelectionRoom(String data) throws IOException {
 		String cryptedData = AES.encrypt(data);
 		for (String userName : roomSelection) {
+			System.out.println("1:"+roomSelection);
 			synchronized (roomSelection) {
+				System.out.println("2okkkk");
 				ObjectOutputStream tempOutput = clients.get(userName);
+				System.out.println("3:::");
 				tempOutput.writeObject(cryptedData);
+				System.out.println("4chu");
 				tempOutput.flush();
 
 			}
@@ -378,7 +382,7 @@ public class Server {
 			} else {
 				sendToRoom(location, "@Narrator;Les villageois ont gagne ! Vive le village de Thiercelieux");
 			}
-/*
+
 			if (winner(location) != null) {
 				System.out.println("lejeu prend fin");
 
@@ -387,14 +391,18 @@ public class Server {
 					this.roomSelection.add(user);
 
 				}
-				this.rooms.remove(location.getName());
+				System.out.println("room keyset"+rooms.keySet().toString());
+				sendToSelectionRoom("ROOM" + rooms.keySet().toString());
+/*
+ * 				this.rooms.remove(location.getName());
+
 				location.setHost(null);
 				location = null;
-				sendToSelectionRoom("ROOM" + rooms.keySet().toString());
+				*/
 				
 			
 			}
-*/
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
