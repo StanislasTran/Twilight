@@ -105,11 +105,8 @@ public class Server {
 		for (String userName : roomSelection) {
 			System.out.println("1:" + roomSelection);
 			synchronized (roomSelection) {
-				System.out.println("2okkkk");
 				ObjectOutputStream tempOutput = clients.get(userName);
-				System.out.println("3:::");
 				tempOutput.writeObject(cryptedData);
-				System.out.println("4chu");
 				tempOutput.flush();
 
 			}

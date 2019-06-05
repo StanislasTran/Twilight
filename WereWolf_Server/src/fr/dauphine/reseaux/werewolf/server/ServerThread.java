@@ -15,7 +15,7 @@ public class ServerThread extends Thread {
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
 	private String username;
-	String message;
+	private String message;
 	private Room location;
 
 	public ServerThread(Server server, Socket socket) throws IOException, ClassNotFoundException {
@@ -100,7 +100,7 @@ public class ServerThread extends Thread {
 								location = server.getRooms().get(roomName);
 								server.sendRoomNameToUser(location, username);
 								System.out.println("room created");
-							}else {
+							} else {
 								server.sendPrivately(username, "SYSTEM \n Ce nom de Room est déjà utilisé");
 
 							}
