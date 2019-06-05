@@ -279,7 +279,7 @@ public class Server {
 					sendToRoom(location, "@Timing;" + "Wolf turn");
 					Thread.sleep(DUREE_TOUR);
 
-					String eliminatedPlayerWolf = eliminate(location);
+					String eliminatedPlayerWolf = eliminate(location, false);
 
 					if (location.getUsers().size() <= 3) {
 						if (!"".equals(eliminatedPlayerWolf)) {
@@ -575,12 +575,15 @@ public class Server {
 	}
 
 	/**
-	 * this function is used for werewolf to choose an player and kill him
+	 * this function is used for werewolf and villagers to choose an player and kill
+	 * him
 	 * 
 	 * @param room
+	 * @param villageVote : true if it is the village vote (one killed mandatory,
+	 *                    random if nobody votes)
 	 * @return the name of killed player
 	 */
-	public String eliminate(Room room) {
+	public String eliminate(Room room, boolean villageVote) {
 		Map<String, Integer> playersVotedTurn = new HashMap<>();
 		System.out.println("eliminate function");
 		System.out.println(room.getVoteMap().size());
@@ -597,7 +600,10 @@ public class Server {
 
 		Random rand = new Random();
 
-		String eliminated = room.getPlayersAlive().get(rand.nextInt(room.getPlayersAlive().size()));
+		String eliminated = "";
+		if (villageVote) {
+			eliminated = room.getPlayersAlive().get(rand.nextInt(room.getPlayersAlive().size()));
+		}
 		int max = -1;
 
 		for (String name : playersVotedTurn.keySet()) {
@@ -624,8 +630,11 @@ public class Server {
 				+ "De suite les villageois se concertent et decident de voter pour designer un coupable ('/vote PSEUDO' pour voter contre la cible)");
 		location.getVoteMap().clear();
 		Thread.sleep(DUREE_TOUR);
-		String userKilledByVillage = eliminate(location);
-		sendToRoom(location, "@Narrator;" + userKilledByVillage + "a ete tue par le village");
+		String userKilledByVillage = eliminate(location, true);
+		if (!"".equals(userKilledByVillage)) {
+			location.getRoleMap().remove(userKilledByVillage);
+		}
+		sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village");
 
 		Thread.sleep(DUREE_WAIT);
 

@@ -114,7 +114,7 @@ public class ServerThread extends Thread {
 						if (location.getRoleTurn().equals(Role.WITCH)) {
 							if (!location.getRoleMap().get(username).equals(Role.WITCH)) {
 								server.sendPrivately(username,
-										"@Game;Vous n'etes pas la sorcière, vous ne pouvez pas voter.");
+										"@Game;Vous n'etes pas la sorciere, vous ne pouvez pas voter.");
 							} else {
 								if (command.split(" ") != null && command.split(" ").length > 1) {
 									String vote = command.split(" ")[1];
@@ -127,7 +127,7 @@ public class ServerThread extends Thread {
 						if (location.getRoleTurn().equals(Role.WITCH)) {
 							if (!location.getRoleMap().get(username).equals(Role.WITCH)) {
 								server.sendPrivately(username,
-										"@Game;Vous n'etes pas sorcière, vous ne pouvez pas voter.");
+										"@Game;Vous n'etes pas sorciere, vous ne pouvez pas voter.");
 							} else {
 								if (command.split(" ") != null && command.split(" ").length > 1) {
 									String playername = command.split(" ")[1];
