@@ -38,7 +38,7 @@ import javax.swing.border.TitledBorder;
 public class Client {
 
 	// TESTS
-	private final static boolean TEST = true;
+	private final static boolean TEST = false;
 
 	// Globals
 	private static ClientThread clientThread;
