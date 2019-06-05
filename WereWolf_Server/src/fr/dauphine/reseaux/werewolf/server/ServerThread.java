@@ -115,7 +115,6 @@ public class ServerThread extends Thread {
 
 								for (String user : location.getUsers()) {
 									server.roomSelection.add(user);
-
 								}
 								server.getRooms().remove(location.getName());
 								location.setHost(null);
@@ -123,6 +122,7 @@ public class ServerThread extends Thread {
 								location = null;
 							} else {
 								server.roomSelection.add(username);
+								location.getUsers().remove(username);
 								server.sendToRoom(location, location.userKey());
 
 							}
