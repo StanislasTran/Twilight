@@ -43,7 +43,6 @@ public class ClientThread implements Runnable {
 
 				encryptedMessage = (String) in.readObject();
 
-
 			} catch (ClassNotFoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -80,16 +79,16 @@ public class ClientThread implements Runnable {
 			}
 
 			if (message.startsWith("@END")) {
-				
+
 				Client.displayText.setText("");
 				Client.top.setText("");
-				Client.displayText.append(message.substring(5)+" won");
+				Client.displayText.append(message.substring(5) + " won");
 				Client.displayText.append("\n welcome back in selection room");
 				Client.displayText.append("\n use /createRoom (roomName) (size) to create a room");
 				Client.displayText.append("\n use /join (roomName) to join a room");
-				
+
 			}
-			
+
 			if (message.startsWith("!")) {
 				System.out.println("List joueurs: " + message);
 				String temp1 = message.substring(1);
@@ -137,6 +136,18 @@ public class ClientThread implements Runnable {
 						// DefaultCaret caret = (DefaultCaret) Client.displayText.getCaret();
 						// caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 						Client.displayText.append("\n" + "NARRATOR >  " + temp2);
+
+					}
+				});
+
+			} else if (message.startsWith("@Twilight")) {
+				final String temp2 = message.split(";")[1];
+
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						Client.displayText.append("\n");
+						Client.displayText.append("\n" + "TWILIGHT >  " + temp2);
 
 					}
 				});
