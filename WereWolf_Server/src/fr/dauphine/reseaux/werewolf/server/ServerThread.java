@@ -88,7 +88,7 @@ public class ServerThread extends Thread {
 
 						server.createRoom(roomName, username, maxSize);
 						location = server.getRooms().get(roomName);
-						server.sendRoomName(location);
+						server.sendRoomNameToUser(location, username);
 						System.out.println("room created");
 
 					} else if (command.startsWith("/join")) {
@@ -96,7 +96,7 @@ public class ServerThread extends Thread {
 						String roomName = command.split(" ")[1];
 						server.joinRoom(roomName, username);
 						location = server.getRooms().get(roomName);
-						server.sendRoomName(location);
+						server.sendRoomNameToUser(location, username);
 
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
