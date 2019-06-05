@@ -102,7 +102,7 @@ public class Server {
 	public void sendToSelectionRoom(String data) throws IOException {
 		String cryptedData = AES.encrypt(data);
 		for (String userName : roomSelection) {
-			System.out.println("1:"+roomSelection);
+			System.out.println("1:" + roomSelection);
 			synchronized (roomSelection) {
 				System.out.println("2okkkk");
 				ObjectOutputStream tempOutput = clients.get(userName);
@@ -229,7 +229,7 @@ public class Server {
 	// GAME METHODS
 
 	public void startGame(Room location) throws InterruptedException {
-
+		Set<String> displayUsers = new HashSet<>(location.getUsers());
 		location.setSeerPower(true);
 		location.setWitchPower(true);
 		try {
@@ -362,15 +362,14 @@ public class Server {
 
 					sendToRoom(location, "@Timing;" + "Villagers turn");
 
-					Set<String> currentUsers = location.getUsers();
 					if (!eliminatedPlayerWolf.equals("")) {
-						currentUsers.remove(eliminatedPlayerWolf);
-						currentUsers.add(eliminatedPlayerWolf + " <Dead>");
+						displayUsers.remove(eliminatedPlayerWolf);
+						displayUsers.add(eliminatedPlayerWolf + " <Dead>");
 						sendToRoom(location, "!" + location.getUsers());
 					}
 					if (!eliminatedPlayerWitch.equals("")) {
-						currentUsers.remove(eliminatedPlayerWitch);
-						currentUsers.add(eliminatedPlayerWitch + " <Dead>");
+						displayUsers.remove(eliminatedPlayerWitch);
+						displayUsers.add(eliminatedPlayerWitch + " <Dead>");
 						sendToRoom(location, "!" + location.getUsers());
 					}
 
@@ -397,16 +396,14 @@ public class Server {
 					this.roomSelection.add(user);
 
 				}
-				System.out.println("room keyset"+rooms.keySet().toString());
+				System.out.println("room keyset" + rooms.keySet().toString());
 				sendToSelectionRoom("ROOM" + rooms.keySet().toString());
-/*
- * 				this.rooms.remove(location.getName());
+				/*
+				 * this.rooms.remove(location.getName());
+				 * 
+				 * location.setHost(null); location = null;
+				 */
 
-				location.setHost(null);
-				location = null;
-				*/
-				
-			
 			}
 
 		} catch (IOException e) {
@@ -751,16 +748,14 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection
-	 *            the roomSelection to set
+	 * @param roomSelection the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms
-	 *            the rooms to set
+	 * @param rooms the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;

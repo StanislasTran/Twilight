@@ -80,11 +80,14 @@ public class ClientThread implements Runnable {
 			}
 
 			if (message.startsWith("@END")) {
-				/*
-				 * DISPLAY POPUP
-				 * 
-				 * 
-				 */
+				
+				Client.displayText.setText("");
+				Client.top.setText("");
+				Client.displayText.append(message.substring(5)+" won");
+				Client.displayText.append("\n welcome back in selection room");
+				Client.displayText.append("\n use /createRoom (roomName) (size) to create a room");
+				Client.displayText.append("\n use /join (roomName) to join a room");
+				
 			}
 			
 			if (message.startsWith("!")) {
