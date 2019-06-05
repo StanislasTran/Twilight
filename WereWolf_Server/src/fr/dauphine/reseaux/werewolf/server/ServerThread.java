@@ -132,6 +132,8 @@ public class ServerThread extends Thread {
 							}
 						} else if (location.getRoleTurn().equals(Role.VILLAGER)) {
 							server.vote(location, username, vote);
+						} else {
+							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
 						}
 					} else if (command.startsWith("/witch_save")) {
 
@@ -145,6 +147,8 @@ public class ServerThread extends Thread {
 									server.resultWitchSave(location, username, vote);
 								}
 							}
+						} else {
+							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
 						}
 
 					} else if (command.startsWith("/witch_kill")) {
@@ -158,6 +162,8 @@ public class ServerThread extends Thread {
 									server.resultWitchKill(location, username, playername);
 								}
 							}
+						} else {
+							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
 						}
 
 					} else {

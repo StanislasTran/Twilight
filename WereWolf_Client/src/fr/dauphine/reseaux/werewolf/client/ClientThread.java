@@ -152,6 +152,7 @@ public class ClientThread implements Runnable {
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
+						Client.displayText.setText("");
 						Client.displayText.append("\n");
 						Client.displayText.append("\n" + "TWILIGHT >  " + temp2);
 
