@@ -66,7 +66,9 @@ public class Server {
 		roomSelection = new HashSet<>();
 
 		rooms = new HashMap<>();
+
 		serverSocket = new ServerSocket(port);
+
 		showMessage("Waiting for clients at " + serverSocket);
 	}
 

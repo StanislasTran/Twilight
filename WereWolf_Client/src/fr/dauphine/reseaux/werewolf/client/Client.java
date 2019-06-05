@@ -85,7 +85,7 @@ public class Client {
 
 	public static final boolean localhost = false;
 
-	public static final String ipServer = "25.31.163.176";
+	public static final String ipServer = "2620:9b::191f:a3b0";
 
 	private static List<String> serverUsersConnected = new ArrayList<String>();
 

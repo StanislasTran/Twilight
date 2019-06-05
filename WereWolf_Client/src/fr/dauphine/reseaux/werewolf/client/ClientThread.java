@@ -36,6 +36,18 @@ public class ClientThread implements Runnable {
 		}
 	}
 
+	public void SEND(final String str) throws IOException {
+		String writeStr;
+
+		writeStr = "@EE@;" + Client.userName + ";" + str;
+
+		String encryptedMessage = AES.encrypt(writeStr);
+
+		Client.output.writeObject(encryptedMessage);
+		Client.output.flush();
+
+	}
+
 	public void RECEIVE() {
 		if (!in.equals(null)) {
 			String encryptedMessage = "";
@@ -233,18 +245,6 @@ public class ClientThread implements Runnable {
 			// }
 
 		}
-	}
-
-	public void SEND(final String str) throws IOException {
-		String writeStr;
-
-		writeStr = "@EE@;" + Client.userName + ";" + str;
-
-		String encryptedMessage = AES.encrypt(writeStr);
-
-		Client.output.writeObject(encryptedMessage);
-		Client.output.flush();
-
 	}
 
 }
