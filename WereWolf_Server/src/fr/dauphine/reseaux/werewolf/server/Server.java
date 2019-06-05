@@ -574,7 +574,7 @@ public class Server {
 			roles.add(Role.WITCH);
 		}
 
-		if (nbPlayer >= 10) {
+		if (nbPlayer >= 5) {
 
 			int nbVillageois = (int) (nbPlayer * (0.75));
 			int nbLoup = nbPlayer - nbVillageois - 1;
