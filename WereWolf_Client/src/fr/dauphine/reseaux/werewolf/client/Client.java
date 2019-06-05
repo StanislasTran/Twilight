@@ -83,7 +83,7 @@ public class Client {
 	// NETWORK
 	public static final int port = 2620;
 
-	public static final boolean localhost = true;
+	public static final boolean localhost = false;
 
 	public static final String ipServer = "25.31.163.176";
 
