@@ -502,33 +502,19 @@ public class Server {
 			roles.add(Role.VILLAGER);
 			roles.add(Role.VILLAGER);
 		}
+		if (nbPlayer > 3) {
 
-		if (nbPlayer >= 4 && nbPlayer < 7) {
-
-			int nbVillageois = nbPlayer - 3;
-
-			for (int i = 0; i < nbVillageois; i++) {
-				roles.add(Role.VILLAGER);
-
-			}
-			roles.add(Role.WOLF);
-			roles.add(Role.WITCH);
-			roles.add(Role.VILLAGER);
-
-		}
-
-		if (nbPlayer >= 7 && nbPlayer <= 11) {
-
-			int nbVillageois = nbPlayer - 4;
+			int nbVillageois = (int) (nbPlayer * (0.75));
+			int nbLoup = nbPlayer - nbVillageois - 1;
 
 			for (int i = 0; i < nbVillageois; i++) {
 				roles.add(Role.VILLAGER);
 
 			}
-			roles.add(Role.WOLF);
-			roles.add(Role.VILLAGER);
+			for (int i = 0; i < nbLoup; i++) {
+				roles.add(Role.WOLF);
+			}
 			roles.add(Role.WITCH);
-			roles.add(Role.VILLAGER);
 
 		}
 
