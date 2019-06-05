@@ -683,6 +683,8 @@ public class Server {
 		String userKilledByVillage = eliminate(location, true);
 
 		if (!"".equals(userKilledByVillage)) {
+
+			
 			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'etait un(e) "
 					+ location.getRoleMap().get(userKilledByVillage));
 			location.getRoleMap().remove(userKilledByVillage);
