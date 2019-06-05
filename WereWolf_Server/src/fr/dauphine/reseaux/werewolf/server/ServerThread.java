@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import fr.dauphine.reseaux.werewolf.server.gameObjects.Role;
+import fr.dauphine.reseaux.werewolf.server.gameObjects.Status;
 
 public class ServerThread extends Thread {
 
@@ -65,9 +66,17 @@ public class ServerThread extends Thread {
 
 					if (command.startsWith("/start")) {
 						if (location == null || location.getHost() != this.username) {
+
 							server.sendPrivately(username,
 									"@Game;Vous n'etes pas l'hote, vous ne pouvez pas lancer la partie.");
 						} else {
+							location.setStatus(Status.STARTED);
+							System.out.println("avant le remove"+server.getRooms().size());
+							server.getRooms().remove(location.getName());
+							System.out.println("apres"
+									+ " le remove"+server.getRooms().size());
+
+							server.sendToSelectionRoom("ROOM "+server.getRooms().keySet());
 							new Thread(new Runnable() {
 
 								@Override
@@ -94,9 +103,15 @@ public class ServerThread extends Thread {
 					} else if (command.startsWith("/join")) {
 
 						String roomName = command.split(" ")[1];
-						server.joinRoom(roomName, username);
-						location = server.getRooms().get(roomName);
-						server.sendRoomNameToUser(location, username);
+						if (server.getRooms().get(roomName).getStatus().equals(Status.WAITING)) {
+							server.joinRoom(roomName, username);
+							location = server.getRooms().get(roomName);
+						} else {
+							server.sendPrivately(username,
+									"SYSTEM la room que vous souhaitez rejoindre n''existe pas ou n'est plus disponible");
+
+						}
+
 
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
@@ -110,6 +125,8 @@ public class ServerThread extends Thread {
 							}
 						} else if (location.getRoleTurn().equals(Role.VILLAGER)) {
 							server.vote(location, username, vote);
+						} else {
+							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
 						}
 					} else if (command.startsWith("/witch_save")) {
 
@@ -123,6 +140,8 @@ public class ServerThread extends Thread {
 									server.resultWitchSave(location, username, vote);
 								}
 							}
+						} else {
+							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
 						}
 
 					} else if (command.startsWith("/witch_kill")) {
@@ -136,6 +155,8 @@ public class ServerThread extends Thread {
 									server.resultWitchKill(location, username, playername);
 								}
 							}
+						} else {
+							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
 						}
 
 					} else {

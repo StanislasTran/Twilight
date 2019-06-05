@@ -241,7 +241,7 @@ public class Server {
 
 			sendToRoom(location, "@Narrator;" + DEBUT_DU_JEU);
 
-			Thread.sleep(2000);
+			Thread.sleep(DUREE_WAIT);
 
 			boolean first_turn = true;
 
@@ -256,8 +256,15 @@ public class Server {
 					if (!first_turn) {
 						location.setRoleTurn(Role.VILLAGER);
 
-						villagersVote(location);
+						sendToRoom(location, "@Timing;" + "Villagers turn");
 
+						String userKilledByVillage = villagersVote(location);
+
+						if (!userKilledByVillage.equals("")) {
+							displayUsers.remove(userKilledByVillage);
+							displayUsers.add(userKilledByVillage + " <Dead>");
+							sendToRoom(location, "!" + displayUsers);
+						}
 						if (gameFinished(location)) {
 							break;
 						}
@@ -281,13 +288,13 @@ public class Server {
 
 					String eliminatedPlayerWolf = eliminate(location, false);
 
-					if (location.getUsers().size() <= 3) {
-						if (!"".equals(eliminatedPlayerWolf)) {
-							location.getRoleMap().remove(eliminatedPlayerWolf);
-						}
-					}
+//					if (location.getUsers().size() <= 3) {
+//						if (!"".equals(eliminatedPlayerWolf)) {
+//							location.getRoleMap().remove(eliminatedPlayerWolf);
+//						}
+//					}
 
-					sendToRoom(location, "@Narrator;" + "Les loups-garous se rendorment");
+					sendToRoom(location, "@Narrator;" + "Les loups-garous se rendorment.");
 					Thread.sleep(DUREE_WAIT);
 
 					String eliminatedPlayerWitch = "";
@@ -314,16 +321,16 @@ public class Server {
 								eliminatedPlayerWitch = witchKillManagement(location);
 							}
 
+							Thread.sleep(DUREE_WAIT);
+
 							sendToRoom(location, "@Narrator;" + "La sorciere retourne dormir");
 						} else {
 							sendToRoom(location,
 									"@Narrator;" + "La sorciere n'est plus de ce monde, elle ne se reveille donc pas.");
-							if (!"".equals(eliminatedPlayerWolf)) {
-								location.getRoleMap().remove(eliminatedPlayerWolf);
-							}
 						}
 						Thread.sleep(DUREE_WAIT);
 					}
+
 					/*
 					 * if (location.getUsers().size() > 4) {
 					 * 
@@ -334,7 +341,7 @@ public class Server {
 					 * "@Narrator;" +
 					 * "Voyante choisissez le joueur dont vous voulez voir la carte");
 					 * 
-					 * // TODOeVOYANTE e implementer
+					 * // TODO VOYANTE e implementer
 					 * 
 					 * }
 					 */
@@ -344,7 +351,9 @@ public class Server {
 						sendToRoom(location,
 								"@Narrator;"
 										+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
-										+ eliminatedPlayerWolf + " et " + eliminatedPlayerWitch + " sont morts ... !");
+										+ eliminatedPlayerWolf + " [" + location.getRoleMap().get(eliminatedPlayerWolf)
+										+ "] et " + eliminatedPlayerWitch + " ["
+										+ location.getRoleMap().get(eliminatedPlayerWitch) + "]" + " sont morts ... !");
 
 					} else if ("".equals(eliminatedPlayerWolf) && "".equals(eliminatedPlayerWitch)) {
 
@@ -354,25 +363,37 @@ public class Server {
 						sendToRoom(location,
 								"@Narrator;"
 										+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
-										+ eliminatedPlayerWolf + " est mort... !");
+										+ eliminatedPlayerWolf + " [" + location.getRoleMap().get(eliminatedPlayerWolf)
+										+ "]" + " est mort... !");
 					} else if (!"".equals(eliminatedPlayerWitch)) {
 						sendToRoom(location,
 								"@Narrator;"
 										+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
-										+ eliminatedPlayerWitch + " est mort... !");
+										+ eliminatedPlayerWitch + " ["
+										+ location.getRoleMap().get(eliminatedPlayerWitch) + "]" + " est mort... !");
 					}
 
-					sendToRoom(location, "@Timing;" + "Villagers turn");
+					// If not saved, remove from RoleMap the killed user
+					if (!"".equals(eliminatedPlayerWolf)) {
+						location.getRoleMap().remove(eliminatedPlayerWolf);
+					}
 
+					Thread.sleep(DUREE_WAIT);
+
+					/*
+					 * 
+					 * Update user list display to the room with dead people
+					 * 
+					 */
 					if (!eliminatedPlayerWolf.equals("")) {
 						displayUsers.remove(eliminatedPlayerWolf);
 						displayUsers.add(eliminatedPlayerWolf + " <Dead>");
-						sendToRoom(location, "!" + location.getUsers());
+						sendToRoom(location, "!" + displayUsers);
 					}
 					if (!eliminatedPlayerWitch.equals("")) {
 						displayUsers.remove(eliminatedPlayerWitch);
 						displayUsers.add(eliminatedPlayerWitch + " <Dead>");
-						sendToRoom(location, "!" + location.getUsers());
+						sendToRoom(location, "!" + displayUsers);
 					}
 
 					location.getVoteMap().clear();
@@ -629,27 +650,25 @@ public class Server {
 	 * @throws InterruptedException
 	 * @throws IOException
 	 */
-	public void villagersVote(Room location) throws InterruptedException, IOException {
+	public String villagersVote(Room location) throws InterruptedException, IOException {
 		sendToRoom(location, "@Narrator;"
 				+ "De suite les villageois se concertent et decident de voter pour designer un coupable ('/vote PSEUDO' pour voter contre la cible)");
 		location.getVoteMap().clear();
 		Thread.sleep(DUREE_TOUR);
 		String userKilledByVillage = eliminate(location, true);
+
 		if (!"".equals(userKilledByVillage)) {
+			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'était un(e) "
+					+ location.getRoleMap().get(userKilledByVillage));
 			location.getRoleMap().remove(userKilledByVillage);
+
 		}
-		sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village");
 
 		Thread.sleep(DUREE_WAIT);
 
-		Set<String> currentUsers = location.getUsers();
-		if (!userKilledByVillage.equals("")) {
-			currentUsers.remove(userKilledByVillage);
-			currentUsers.add(userKilledByVillage + " <Dead>");
-			sendToRoom(location, "!" + location.getUsers());
-		}
 		location.getVoteMap().clear();
 
+		return userKilledByVillage;
 	}
 
 	public void killPlayer(Room room, String player) {
@@ -675,7 +694,6 @@ public class Server {
 					room.setPlayerSaved(false);
 				} else {
 					sendPrivately(player, "@Game;" + "Player is dead.");
-					room.getRoleMap().remove(room.getPlayersDead().getLast());
 				}
 
 			}

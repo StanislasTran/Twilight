@@ -89,6 +89,12 @@ public class ClientThread implements Runnable {
 
 			}
 
+
+			if (message.startsWith("SYSTEM")) {
+				Client.displayText.append("Système: "+message.substring(8) );
+			}
+
+
 			if (message.startsWith("!")) {
 				System.out.println("List joueurs: " + message);
 				String temp1 = message.substring(1);
