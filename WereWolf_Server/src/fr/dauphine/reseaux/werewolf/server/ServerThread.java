@@ -66,8 +66,8 @@ public class ServerThread extends Thread {
 
 					if (command.startsWith("/start")) {
 						if (location == null || location.getHost() != this.username) {
-							System.out.println("your not the host");
-							// mettre ca sur le chat
+							server.sendPrivately(username,
+									"@Game;Vous n'êtes pas l'hôte, vous ne pouvez pas lancer la partie.");
 						} else {
 							new Thread(new Runnable() {
 
@@ -107,26 +107,26 @@ public class ServerThread extends Thread {
 							} else {
 								server.vote(location, username, vote);
 							}
+						} else if (location.getRoleTurn().equals(Role.VILLAGER)) {
+							server.vote(location, username, vote);
 						}
 					} else if (command.startsWith("/witch_save")) {
 
-						if (location.getRoleTurn().equals(Role.WOLF)) {
-							if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
+						if (location.getRoleTurn().equals(Role.WITCH)) {
+							if (!location.getRoleMap().get(username).equals(Role.WITCH)) {
 								server.sendPrivately(username,
 										"@Game;Vous n'etes pas la sorcière, vous ne pouvez pas voter.");
 							} else {
 								if (command.split(" ") != null && command.split(" ").length > 1) {
-
 									String vote = command.split(" ")[1];
 									server.resultWitchSave(location, username, vote);
-
 								}
 							}
 						}
 
 					} else if (command.startsWith("/witch_kill")) {
-						if (location.getRoleTurn().equals(Role.WOLF)) {
-							if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
+						if (location.getRoleTurn().equals(Role.WITCH)) {
+							if (!location.getRoleMap().get(username).equals(Role.WITCH)) {
 								server.sendPrivately(username,
 										"@Game;Vous n'etes pas sorcière, vous ne pouvez pas voter.");
 							} else {

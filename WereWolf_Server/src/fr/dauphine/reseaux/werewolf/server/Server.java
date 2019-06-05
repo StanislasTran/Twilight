@@ -31,6 +31,7 @@ public class Server {
 
 	// Duree du tour des loup-garous (ms)
 	private static final long DUREE_TOUR = 30000;
+	private static final long DUREE_WAIT = 2000;
 
 	JFrame serverGui;
 	JTextArea displayWindow;
@@ -192,7 +193,7 @@ public class Server {
 						}
 
 						room.setHost(newHost);
-						sendPrivately(newHost, "@Narrator;Host have left the game. You are the new host !");
+						sendPrivately(newHost, "@Game;Host have left the game. You are the new host !");
 					}
 					sendToRoom(room, "!" + room.getUsers());
 
@@ -242,7 +243,6 @@ public class Server {
 
 			while (!gameFinished(location)) {
 				try {
-
 					/*
 					 * 
 					 * VILLAGER turn
@@ -250,6 +250,7 @@ public class Server {
 					 * 
 					 */
 					if (!first_turn) {
+						location.setRoleTurn(Role.VILLAGER);
 
 						villagersVote(location);
 
@@ -275,7 +276,6 @@ public class Server {
 					Thread.sleep(DUREE_TOUR);
 
 					String eliminatedPlayerWolf = eliminate(location);
-					String eliminatedPlayerWitch = "";
 
 					if (location.getUsers().size() <= 3) {
 						if (!"".equals(eliminatedPlayerWolf)) {
@@ -283,9 +283,11 @@ public class Server {
 						}
 					}
 
-					if (gameFinished(location)) {
-						break;
-					}
+					sendToRoom(location, "@Narrator;" + "Les loups-garous se rendorment");
+					Thread.sleep(DUREE_WAIT);
+
+					String eliminatedPlayerWitch = "";
+
 					/*
 					 * 
 					 * WITCH turn
@@ -298,9 +300,9 @@ public class Server {
 						if (witch_Alive(location)) {
 							sendToRoom(location, "@Narrator;" + "La sorciere se reveille");
 
-							// Envoie un MP pour lui dire qui est mort;le joueur est rajout� � la liste
+							// Envoie un MP pour lui dire qui est mort;le joueur est rajoute e la liste
 							// des
-							// alives s'il est ressuscit�
+							// alives s'il est ressuscite
 							if (!"".equals(eliminatedPlayerWolf)) {
 								eliminatedPlayerWolf = sendDeadPlayerToWitch(location);
 							}
@@ -316,6 +318,7 @@ public class Server {
 								location.getRoleMap().remove(eliminatedPlayerWolf);
 							}
 						}
+						Thread.sleep(DUREE_WAIT);
 					}
 					/*
 					 * if (location.getUsers().size() > 4) {
@@ -327,11 +330,10 @@ public class Server {
 					 * "@Narrator;" +
 					 * "Voyante choisissez le joueur dont vous voulez voir la carte");
 					 * 
-					 * // TODO�VOYANTE � implementer
+					 * // TODOeVOYANTE e implementer
 					 * 
 					 * }
 					 */
-					Thread.sleep(1);
 
 					// SEND MESSAGE DEAD PERSON TO VILLAGE
 					if (!"".equals(eliminatedPlayerWolf) && !"".equals(eliminatedPlayerWitch)) {
@@ -349,7 +351,7 @@ public class Server {
 								"@Narrator;"
 										+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
 										+ eliminatedPlayerWolf + " est mort... !");
-					} else if ("".equals(eliminatedPlayerWitch)) {
+					} else if (!"".equals(eliminatedPlayerWitch)) {
 						sendToRoom(location,
 								"@Narrator;"
 										+ "Le jour se leve: les villageois se reveillent et decouvrent avec effroi que "
@@ -370,13 +372,13 @@ public class Server {
 						sendToRoom(location, "!" + location.getUsers());
 					}
 
-					System.out.println("Alive " + location.getPlayersAlive());
-					System.out.println("Dead " + location.getPlayersDead());
 					location.getVoteMap().clear();
 				} catch (SocketException e) {
 					break;
 				}
 			}
+
+			Thread.sleep(DUREE_WAIT);
 
 			if (winner(location).equals(Role.WOLF)) {
 				sendToRoom(location, "@Narrator;Les loups-garous ont gagne !");
@@ -526,11 +528,11 @@ public class Server {
 
 			System.out.println(usernameVoter + " à vote pour " + room.getVoteMap().get(usernameVoter));
 			System.out.println("size " + room.getVoteMap());
-			sendPrivately(usernameVoter, "@Narrator;Vous avez vote " + playerVoted);
+			sendPrivately(usernameVoter, "@Game;Vous avez vote " + playerVoted);
 
 		} else {
 
-			sendPrivately(usernameVoter, "@Narrator;" + "Le joueur est deja mort, choisissez un autre !");
+			sendPrivately(usernameVoter, "@Game;" + "Le joueur est deja mort, choisissez un autre !");
 
 		}
 
@@ -601,6 +603,9 @@ public class Server {
 		Thread.sleep(DUREE_TOUR);
 		String userKilledByVillage = eliminate(location);
 		sendToRoom(location, "@Narrator;" + userKilledByVillage + "a ete tue par le village");
+
+		Thread.sleep(DUREE_WAIT);
+
 		Set<String> currentUsers = location.getUsers();
 		if (!userKilledByVillage.equals("")) {
 			currentUsers.remove(userKilledByVillage);
@@ -621,20 +626,19 @@ public class Server {
 		String eliminated = room.getPlayersDead().getLast();
 		for (String player : room.getRoleMap().keySet()) {
 			if (room.getRoleMap().get(player).equals(Role.WITCH) && room.getWitchSavePower()) {
-				sendPrivately(player,
-						"@Narrator;" + "This player is dead. Do you want to save him ? (/witch_save ${yes or no}");
+				sendPrivately(player, "@Narrator;" + room.getPlayersDead().getLast()
+						+ " is dead. Do you want to save him ? (/witch_save ${yes or no}");
 				sendToRoom(room, "@Timing;" + "Witch turn");
-				sendPrivately(player, "@Narrator;" + room.getPlayersDead().getLast());
 				Thread.sleep(DUREE_TOUR - 0);
 				if (room.getPlayerSaved()) {
-					sendPrivately(player, "@Narrator;" + "Player " + room.getPlayersDead().getLast() + " is saved");
+					sendPrivately(player, "@Game;" + "Player " + room.getPlayersDead().getLast() + " is saved.");
 					room.setWitchSavePower(false);
 					room.getPlayersAlive().add(room.getPlayersDead().getLast());
 					room.getPlayersDead().removeLast();
 					eliminated = "";
 					room.setPlayerSaved(false);
 				} else {
-					sendPrivately(player, "@Narrator;" + "Player is dead");
+					sendPrivately(player, "@Game;" + "Player is dead.");
 					room.getRoleMap().remove(room.getPlayersDead().getLast());
 				}
 
@@ -649,10 +653,10 @@ public class Server {
 		room.setPlayerSaved(false);
 		if (vote.equals("yes")) {
 			room.setPlayerSaved(true);
-			sendPrivately(witchName, "@Narrator;Vous avez decide de sauver le joueur tue par les loups !");
+			sendPrivately(witchName, "@Game;Vous avez decide de sauver le joueur tue par les loups !");
 		} else if (vote.equals("no")) {
 			room.setPlayerSaved(false);
-			sendPrivately(witchName, "@Narrator;Vous avez decide de ne pas sauver le joueur tue par les loups !");
+			sendPrivately(witchName, "@Game;Vous avez decide de ne pas sauver le joueur tue par les loups !");
 		}
 	}
 
@@ -669,7 +673,7 @@ public class Server {
 					room.getPlayersAlive().remove(toKill);
 					room.getPlayersDead().add(toKill);
 					room.getRoleMap().remove(toKill);
-					sendPrivately(player, "@Narrator;" + "Player " + toKill + " killed");
+					sendPrivately(player, "@Game;" + "Player " + toKill + " killed");
 
 					room.setPlayerWitchToKill("");
 
@@ -688,12 +692,11 @@ public class Server {
 		if (room.getPlayersAlive().contains(playername)) {
 			room.setPlayerWitchToKill(playername);
 			room.setWitchKillPower(false);
-			sendPrivately(witchUserName, "@Narrator;" + "Vous decidez de tuer " + playername + ".");
+			sendPrivately(witchUserName, "@Game;" + "Vous decidez de tuer " + playername + ".");
 		} else if (room.getPlayersDead().contains(playername)) {
-			sendPrivately(witchUserName, "@Narrator;" + "Player " + playername + " isn't alive, you cannot kill him.");
+			sendPrivately(witchUserName, "@Game;" + "Player " + playername + " isn't alive, you cannot kill him.");
 		} else {
-			sendPrivately(witchUserName,
-					"@Narrator;" + "Player " + playername + " doesn't exist, you cannot kill him.");
+			sendPrivately(witchUserName, "@Game;" + "Player " + playername + " doesn't exist, you cannot kill him.");
 		}
 
 	}
@@ -725,16 +728,14 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection
-	 *            the roomSelection to set
+	 * @param roomSelection the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms
-	 *            the rooms to set
+	 * @param rooms the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;

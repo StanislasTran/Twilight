@@ -93,7 +93,6 @@ public class Client {
 	public static void preConnect() {
 		try {
 			if (localhost) {
-
 				SOCK = new Socket(InetAddress.getLocalHost(), port);
 			} else {
 				SOCK = new Socket(InetAddress.getByName(ipServer), port);
