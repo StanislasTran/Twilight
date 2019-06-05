@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import fr.dauphine.reseaux.werewolf.server.gameObjects.Role;
+import fr.dauphine.reseaux.werewolf.server.gameObjects.Status;
 
 ///!!!!\\\ gÃ©rer la dÃ©connexion d'un user dans une room
 public class Room {
@@ -16,6 +17,7 @@ public class Room {
 	private Set<String> users;
 	private String host;
 	private int maxSize;
+	private Status status;
 
 	/**
 	 * Role per player in this room
@@ -35,11 +37,11 @@ public class Room {
 	/**
 	 * not used
 	 */
-	private Boolean seerPower = false; // seer = voyante ; // gerer si la voyante a utilisé son pouvoir
+	private Boolean seerPower = false; // seer = voyante ; // gerer si la voyante a utilisï¿½ son pouvoir
 	/**
 	 * not used
 	 */
-	private Boolean witchPower = false; // witch = sorciere ; // gerer si la sorcière a utilisé son pouvoir
+	private Boolean witchPower = false; // witch = sorciere ; // gerer si la sorciï¿½re a utilisï¿½ son pouvoir
 
 	private Boolean witchSavePower = true;
 	private Boolean witchKillPower = true;
@@ -60,6 +62,7 @@ public class Room {
 		this.users = new HashSet<>();
 		this.users.add(Objects.requireNonNull(user));
 		this.host = user;
+		this.status=Status.WAITING;
 
 	}
 
@@ -199,6 +202,14 @@ public class Room {
 
 	public void setUsers(Set<String> users) {
 		this.users = users;
+	}
+	
+	public void setStatus(Status status) {
+		this.status=status;
+	}
+	
+	public Status getStatus() {
+		return this.status;
 	}
 
 }
