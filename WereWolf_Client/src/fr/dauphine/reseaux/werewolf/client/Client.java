@@ -91,7 +91,7 @@ public class Client {
 
 	// GAME
 
-	public static String roleTurn = "";
+	public static String roleTurn = "SELECTION";
 
 	@SuppressWarnings("unchecked")
 	public static void preConnect() {
@@ -319,8 +319,10 @@ public class Client {
 					case "VILLAGER":
 						typeText.setText("/vote " + selectedUser);
 						break;
-					default:
+					case "SELECTION":
 						typeText.setText("/join " + selectedUser);
+						break;
+					default:
 
 					}
 					typeText.requestFocus();

@@ -72,7 +72,7 @@ public class Server {
 
 	// Waiting for clients to connect
 	public void waitingForClients() throws IOException, ClassNotFoundException {
- 
+
 		while (true) {
 			socket = serverSocket.accept();
 
@@ -452,7 +452,7 @@ public class Server {
 			if (winner(location) != null) {
 				System.out.println("le jeu prend fin");
 
-				sendToRoom(location, "@ROLETURN;");
+				sendToRoom(location, "@ROLETURN;SELECTION");
 				sendToRoom(location, "@END " + winner(location));
 				for (String user : location.getUsers()) {
 					this.roomSelection.add(user);
