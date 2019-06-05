@@ -165,13 +165,12 @@ public class ServerThread extends Thread {
 							if (server.getRooms().get(roomName).getStatus().equals(Status.WAITING)) {
 								server.joinRoom(roomName, username);
 								location = server.getRooms().get(roomName);
+								server.sendRoomNameToUser(location, username);
 							} else {
 								server.sendPrivately(username,
 										"SYSTEM la room que vous souhaitez rejoindre n''existe pas ou n'est plus disponible");
-
 							}
 						}
-
 					} else if (command.startsWith("/vote")) {
 						if (server.roomSelection.contains(username)) {
 							server.sendPrivately(username,
@@ -236,9 +235,26 @@ public class ServerThread extends Thread {
 							}
 						}
 
-					}
-					// case où on veut juste envoyer un message
-					else {
+					} else if (command.startsWith("/wolf")) {
+						if (location.getRoleTurn().equals(Role.WOLF)) {
+							if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
+								server.sendPrivately(username,
+										"@Game;Vous n'etes pas loup-garou, vous ne pouvez pas voter.");
+							} else {
+								if (command.split(" ") != null && command.split(" ").length > 1) {
+									String wolfMessage = command.split(" ")[1];
+									// String wolfMessage = command;
+									System.out.println(wolfMessage);
+									System.out.println(location.getPlayersAlive());
+									server.sendToWolves(location, location.getPlayersAlive(), wolfMessage, username);
+								}
+							}
+						} else {
+							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
+						}
+						// case où on veut juste envoyer un message
+
+					} else {
 						if (server.getRoomSelection().contains(username)) {
 							server.sendToSelectionRoom(message);
 

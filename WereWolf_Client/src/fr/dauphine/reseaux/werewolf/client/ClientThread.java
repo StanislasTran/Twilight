@@ -90,6 +90,7 @@ public class ClientThread implements Runnable {
 			}
 
 			if (message.startsWith("SYSTEM")) {
+
 				Client.displayText.append("Système: " + message.substring(7));
 			}
 
@@ -125,6 +126,18 @@ public class ClientThread implements Runnable {
 					@Override
 					public void run() {
 						Client.displayText.append("\n" + temp2[1] + ": " + temp2[2]);
+					}
+				});
+			}
+
+			else if (message.startsWith("@Wolf;")) {
+				final String pseudo = message.split(";")[1];
+				final String msg = message.split(";")[2];
+
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						Client.displayText.append("\n" + "<Wolf " + pseudo + "> " + msg);
 					}
 				});
 			}
