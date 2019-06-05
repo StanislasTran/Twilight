@@ -71,12 +71,11 @@ public class ServerThread extends Thread {
 									"@Game;Vous n'etes pas l'hote, vous ne pouvez pas lancer la partie.");
 						} else {
 							location.setStatus(Status.STARTED);
-							System.out.println("avant le remove"+server.getRooms().size());
+							System.out.println("avant le remove" + server.getRooms().size());
 							server.getRooms().remove(location.getName());
-							System.out.println("apres"
-									+ " le remove"+server.getRooms().size());
+							System.out.println("apres" + " le remove" + server.getRooms().size());
 
-							server.sendToSelectionRoom("ROOM "+server.getRooms().keySet());
+							server.sendToSelectionRoom("ROOM " + server.getRooms().keySet());
 							new Thread(new Runnable() {
 
 								@Override
@@ -106,12 +105,12 @@ public class ServerThread extends Thread {
 						if (server.getRooms().get(roomName).getStatus().equals(Status.WAITING)) {
 							server.joinRoom(roomName, username);
 							location = server.getRooms().get(roomName);
+							server.sendRoomNameToUser(location, username);
 						} else {
 							server.sendPrivately(username,
 									"SYSTEM la room que vous souhaitez rejoindre n''existe pas ou n'est plus disponible");
 
 						}
-
 
 					} else if (command.startsWith("/vote")) {
 						String vote = command.split(" ")[1];
@@ -153,6 +152,24 @@ public class ServerThread extends Thread {
 								if (command.split(" ") != null && command.split(" ").length > 1) {
 									String playername = command.split(" ")[1];
 									server.resultWitchKill(location, username, playername);
+								}
+							}
+						} else {
+							server.sendPrivately(username, "@Game;Ce n'est pas votre tour !");
+						}
+
+					} else if (command.startsWith("/wolf")) {
+						if (location.getRoleTurn().equals(Role.WOLF)) {
+							if (!location.getRoleMap().get(username).equals(Role.WOLF)) {
+								server.sendPrivately(username,
+										"@Game;Vous n'etes pas loup-garou, vous ne pouvez pas voter.");
+							} else {
+								if (command.split(" ") != null && command.split(" ").length > 1) {
+									String wolfMessage = command.split(" ")[1];
+									// String wolfMessage = command;
+									System.out.println(wolfMessage);
+									System.out.println(location.getPlayersAlive());
+									server.sendToWolves(location, location.getPlayersAlive(), wolfMessage, username);
 								}
 							}
 						} else {

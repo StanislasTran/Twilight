@@ -103,13 +103,9 @@ public class Server {
 	public void sendToSelectionRoom(String data) throws IOException {
 		String cryptedData = AES.encrypt(data);
 		for (String userName : roomSelection) {
-			System.out.println("1:" + roomSelection);
 			synchronized (roomSelection) {
-				System.out.println("2okkkk");
 				ObjectOutputStream tempOutput = clients.get(userName);
-				System.out.println("3:::");
 				tempOutput.writeObject(cryptedData);
-				System.out.println("4chu");
 				tempOutput.flush();
 
 			}
@@ -169,6 +165,17 @@ public class Server {
 		ObjectOutputStream tempOutput = clients.get(username);
 		tempOutput.writeObject(cryptedMessage);
 		tempOutput.flush();
+
+	}
+
+	// Wolves chat
+	public void sendToWolves(Room room, ArrayList<String> usersAlive, String message, String myUsername)
+			throws IOException {
+		for (String user : usersAlive) {
+			if (room.getRoleMap().get(user).equals(Role.WOLF)) {
+				sendPrivately(user, "@Wolf;" + myUsername + ";" + message);
+			}
+		}
 
 	}
 
@@ -288,11 +295,11 @@ public class Server {
 
 					String eliminatedPlayerWolf = eliminate(location, false);
 
-//					if (location.getUsers().size() <= 3) {
-//						if (!"".equals(eliminatedPlayerWolf)) {
-//							location.getRoleMap().remove(eliminatedPlayerWolf);
-//						}
-//					}
+					// if (location.getUsers().size() <= 3) {
+					// if (!"".equals(eliminatedPlayerWolf)) {
+					// location.getRoleMap().remove(eliminatedPlayerWolf);
+					// }
+					// }
 
 					sendToRoom(location, "@Narrator;" + "Les loups-garous se rendorment.");
 					Thread.sleep(DUREE_WAIT);
@@ -524,8 +531,9 @@ public class Server {
 		if (nbPlayer == 3) {
 
 			roles.add(Role.WOLF);
+			roles.add(Role.WOLF);
 			roles.add(Role.VILLAGER);
-			roles.add(Role.VILLAGER);
+			// roles.add(Role.VILLAGER);
 		}
 
 		if (nbPlayer == 4) {
@@ -658,7 +666,7 @@ public class Server {
 		String userKilledByVillage = eliminate(location, true);
 
 		if (!"".equals(userKilledByVillage)) {
-			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'était un(e) "
+			sendToRoom(location, "@Narrator;" + userKilledByVillage + " a ete tue par le village et c'ï¿½tait un(e) "
 					+ location.getRoleMap().get(userKilledByVillage));
 			location.getRoleMap().remove(userKilledByVillage);
 
