@@ -40,6 +40,24 @@ public class Client {
 	// TESTS
 	private final static boolean TEST = false;
 
+	// NETWORK
+	/**
+	 * localhost=true : jeu sur localhost uniquement; localhost=false : jeu en
+	 * réseau local, connexion au serveur à l'adresse indiquée dans 'ipServer'
+	 * ci-dessous
+	 */
+	public static final boolean localhost = true;
+
+	public static final int port = 2620;
+
+	public static final String ipServer = "192.168.43.207";
+
+	/**
+	 * Liste des utilisateurs connectés sur le serveur. Permet l'unicité du nom
+	 * d'utilisateur.
+	 */
+	private static List<String> serverUsersConnected = new ArrayList<String>();
+
 	// Globals
 	private static ClientThread clientThread;
 	public static String userName = "Anonymous";
@@ -80,18 +98,12 @@ public class Client {
 	public static JLabel popUpText = new JLabel("");
 	public static JButton popUpEnter = new JButton("Back");
 
-	// NETWORK
-	public static final int port = 2620;
+	// Game
 
-	public static final boolean localhost = false;
-
-	// public static final String ipServer = "2620:9b::191f:a3b0";
-	public static final String ipServer = "192.168.43.207";
-
-	private static List<String> serverUsersConnected = new ArrayList<String>();
-
-	// GAME
-
+	/**
+	 * Indique l'étape du jeu en cours (Menu selection, Menu room, Tour loup-garou,
+	 * Tour sorciere
+	 */
 	public static String roleTurn = "SELECTION";
 
 	@SuppressWarnings("unchecked")

@@ -593,8 +593,8 @@ public class Server {
 		}
 		if (nbPlayer == 6) {
 
-			int nbVillageois = 4;
-			int nbLoup = 1;
+			int nbVillageois = 3;
+			int nbLoup = 2;
 
 			for (int i = 0; i < nbVillageois; i++) {
 				roles.add(Role.VILLAGER);
