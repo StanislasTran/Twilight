@@ -10,10 +10,13 @@ import fr.dauphine.reseaux.werewolf.server.gameObjects.Status;
 
 public class ServerThread extends Thread {
 
+	// NETWORK VARIABLES
 	private Server server;
 	private Socket socket;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
+
+	// GAME VARIABLES
 	private String username;
 	private String message;
 	private Room location;
@@ -27,8 +30,10 @@ public class ServerThread extends Thread {
 		output.flush();
 		input = new ObjectInputStream(this.socket.getInputStream());
 
+		// Send list of users to Client
 		output.writeObject(server.clients.keySet().toString());
 
+		// Waiting for username from the client
 		username = (String) input.readObject();
 
 		server.clients.put(username, output);
@@ -38,8 +43,8 @@ public class ServerThread extends Thread {
 		server.roomSelection.add(username);
 
 		server.sendToSelectionRoom("!" + server.getRooms().keySet());
-
 		server.showMessage("\n" + username + "(" + socket.getInetAddress().getHostAddress() + ") is online");
+
 		// starting the thread
 		start();
 	}
@@ -50,19 +55,19 @@ public class ServerThread extends Thread {
 		try {
 			// Thread will run until connections are present
 			while (true) {
-				try {
-					String encryptedMessage = (String) input.readObject();
-					message = AES.decrypt(encryptedMessage);
-					System.out.println("decrypted " + message);
-				} catch (Exception e) {
-					break;
-				}
+				// Waiting for messages from Clients
+				String encryptedMessage = (String) input.readObject();
 
+				// Decrypt the message
+				message = AES.decrypt(encryptedMessage);
+
+				// Cas en-tête '@EE@'
 				if (message.toString().contains("@EE@")) {
 					String[] tabMsg = message.toString().split(";");
 
 					String command = tabMsg[2];
 
+					// Cas si le joueur est mort
 					if (location != null && location.getPlayersDead().contains(username)
 							&& !server.roomSelection.contains(username)) {
 						if (command.startsWith("/")) {
@@ -77,6 +82,7 @@ public class ServerThread extends Thread {
 							server.sendToDeadRoom(location, newmsg);
 						}
 
+						// Lancer une partie
 					} else if (command.startsWith("/start")) {
 
 						if (server.roomSelection.contains(username)) {
@@ -107,6 +113,7 @@ public class ServerThread extends Thread {
 								}
 							}).start();
 						}
+						// Retourner dans la select room
 					} else if (command.startsWith("/back")) {
 						if (server.getRoomSelection().contains(username)) {
 							server.sendPrivately(username, "SYSTEM Vous êtes déjà dans la selectionRoom");
@@ -135,6 +142,7 @@ public class ServerThread extends Thread {
 							}
 						}
 
+						// Creer une room de jeu
 					} else if (command.startsWith("/createRoom")) {
 						if (!server.roomSelection.contains(username)) {
 							server.sendPrivately(username,
@@ -157,6 +165,8 @@ public class ServerThread extends Thread {
 								server.sendPrivately(username, "SYSTEM \n La commande est incorrecte");
 							}
 						}
+
+						// Rejoindre une room de jeu
 					} else if (command.startsWith("/join")) {
 						if (!server.roomSelection.contains(username)) {
 							server.sendPrivately(username,
@@ -173,6 +183,8 @@ public class ServerThread extends Thread {
 										"SYSTEM la room que vous souhaitez rejoindre n''existe pas ou n'est plus disponible");
 							}
 						}
+
+						// Voter (tour des loups-garous ou vote du village)
 					} else if (command.startsWith("/vote")) {
 						if (server.roomSelection.contains(username)) {
 							server.sendPrivately(username,
@@ -197,6 +209,8 @@ public class ServerThread extends Thread {
 
 							}
 						}
+
+						// Utilisation de la potion de vie de la sorciere
 					} else if (command.startsWith("/witch_save")) {
 						try {
 							if (server.roomSelection.contains(username)) {
@@ -221,6 +235,8 @@ public class ServerThread extends Thread {
 						} catch (Exception ex) {
 
 						}
+
+						// Utilisation de la potion de mort de la sorciere
 					} else if (command.startsWith("/witch_kill")) {
 						try {
 							if (server.roomSelection.contains(username)) {
@@ -244,6 +260,8 @@ public class ServerThread extends Thread {
 							}
 						} catch (Exception ex) {
 						}
+
+						// Discussion entre loup seulement
 					} else if (command.startsWith("/wolf")) {
 						try {
 							if (location.getRoleTurn().equals(Role.WOLF)) {
@@ -266,6 +284,8 @@ public class ServerThread extends Thread {
 							// case où on veut juste envoyer un message
 						} catch (Exception ex) {
 						}
+
+						// Envoyer un message sur le chat (select room ou room de jeu)
 					} else {
 						if (server.getRoomSelection().contains(username)) {
 							server.sendToSelectionRoom(message);
@@ -278,13 +298,14 @@ public class ServerThread extends Thread {
 
 			}
 		} catch (IOException ex) {
+		} catch (ClassNotFoundException e1) {
 		} finally {
-
+			// Quand un client est fermé, on le retire de la liste des clients connectés au
+			// serveur
 			try {
 				server.removeClient(location, username);
 				server.removeConnection(socket, username);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 			}
 		}
 	}

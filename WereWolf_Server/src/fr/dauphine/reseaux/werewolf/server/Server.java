@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -29,9 +28,19 @@ public class Server {
 	private static final String DEBUT_DU_JEU = "Bienvenue sur le jeu du Loup-Garou! Le jeu peut commencer. \n Nous entrons dans une nuit noire  Thiercelieux, les villageois dorment profondemment ...\n\n"
 			+ "-------------------------------------------------------\n";
 
-	// Duree du tour des loup-garous (ms)
+	// TIMING
+
+	/**
+	 * Duree du tour des loup-garous (ms)
+	 */
 	private static final long DUREE_TOUR = 30000;
+
+	/**
+	 * Duree d'attente entre les evenements du jeu
+	 */
 	private static final long DUREE_WAIT = 2000;
+
+	// NETWORK
 
 	JFrame serverGui;
 	JTextArea displayWindow;
@@ -40,10 +49,16 @@ public class Server {
 
 	public Hashtable<Socket, ObjectOutputStream> outputStreams;
 
-	// contain all users connected to the server
+	/*
+	 * Contain all users connected to the server
+	 */
 	public Hashtable<String, ObjectOutputStream> clients;
 
-	// contain users in the roomSelection
+	// GAME
+
+	/*
+	 * Contain users in the roomSelection
+	 */
 	public Set<String> roomSelection;
 	/**
 	 * Mapping between room name and Room (list of users in the room and all game
@@ -51,7 +66,8 @@ public class Server {
 	 */
 	private Map<String, Room> rooms;
 
-	// constructor
+	// Constructor
+
 	public Server(int port) throws IOException {
 		// Simple Gui for Server
 		serverGui = new JFrame("Server");
@@ -61,188 +77,23 @@ public class Server {
 		serverGui.add(new JScrollPane(displayWindow), BorderLayout.CENTER);
 		serverGui.setVisible(true);
 
+		// initiate network variables
 		outputStreams = new Hashtable<>();
 		clients = new Hashtable<>();
-		roomSelection = new HashSet<>();
-
-		rooms = new HashMap<>();
-
 		serverSocket = new ServerSocket(port);
+
+		// initiate game variables
+		roomSelection = new HashSet<>();
+		rooms = new HashMap<>();
 
 		showMessage("Waiting for clients at " + serverSocket);
 	}
 
-	// Waiting for clients to connect
-	public void waitingForClients() throws IOException, ClassNotFoundException {
-
-		while (true) {
-			socket = serverSocket.accept();
-
-			new ServerThread(this, socket);
-		}
-	}
-
-	// displaying message on Server GUI
-	public void showMessage(final String message) {
-		// TODO Auto-generated method stub
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				displayWindow.append(message);
-			}
-
-		});
-	}
-
-	/**
-	 * sending a message to all available clients in the selectionRoom
-	 * 
-	 * @param data
-	 * @throws IOException
-	 */
-	public void sendToSelectionRoom(String data) throws IOException {
-		String cryptedData = AES.encrypt(data);
-		for (String userName : roomSelection) {
-			synchronized (roomSelection) {
-				ObjectOutputStream tempOutput = clients.get(userName);
-				tempOutput.writeObject(cryptedData);
-				tempOutput.flush();
-
-			}
-		}
-	}
-
-	/**
-	 * send the data to every user in the Room room
-	 * 
-	 * @param data
-	 * @throws IOException
-	 */
-	public void sendToRoom(Room room, String data) throws IOException {
-		String cryptedData = AES.encrypt(data);
-
-		for (String userName : room.getUsers()) {
-			synchronized (clients) {
-				ObjectOutputStream tempOutput = clients.get(userName);
-				if (tempOutput != null) {
-					tempOutput.writeObject(cryptedData);
-					tempOutput.flush();
-				}
-
-			}
-		}
-	}
-
-	/**
-	 * send the data to all user in the Room room
-	 * 
-	 * @param data
-	 * @throws IOException
-	 */
-	public void sendToDeadRoom(Room room, String data) throws IOException {
-		String cryptedData = AES.encrypt(data);
-
-		for (String userName : room.getUsers()) {
-			if (room.getPlayersDead().contains(userName)) {
-
-				synchronized (clients) {
-					ObjectOutputStream tempOutput = clients.get(userName);
-					if (tempOutput != null) {
-						tempOutput.writeObject(cryptedData);
-						tempOutput.flush();
-					}
-
-				}
-			}
-		}
-	}
-
-	// To get Output Stream of the available clients from the hash table
-	private Enumeration<ObjectOutputStream> getOutputStreams() {
-		// TODO Auto-generated method stub
-		return outputStreams.elements();
-	}
-
-	// Sending a private Message to the user with the Username
-	public void sendPrivately(String username, String message) throws IOException {
-		String cryptedMessage = AES.encrypt(message);
-		// TODO Auto-generated method stub
-		ObjectOutputStream tempOutput = clients.get(username);
-		tempOutput.writeObject(cryptedMessage);
-		tempOutput.flush();
-
-	}
-
-	// Allows wolves to chat with other wolves and to not be seen by other roles
-	public void sendToWolves(Room room, ArrayList<String> usersAlive, String message, String myUsername)
-			throws IOException {
-		for (String user : usersAlive) {
-			if (room.getRoleMap().get(user).equals(Role.WOLF)) {
-				sendPrivately(user, "@Wolf;" + myUsername + ";" + message);
-			}
-		}
-
-	}
-
-	// Removing the client from the client hash table
-	public void removeClient(Room room, String username) throws IOException {
-
-		synchronized (clients) {
-			if (room != null) {
-
-				room.getPlayersAlive().remove(username);
-				room.getPlayersDead().remove(username);
-				room.getRoleMap().remove(username);
-				room.getUsers().remove(username);
-			}
-			clients.remove(username);
-			if (room != null) {
-				if (room.getUsers().isEmpty()) {
-					rooms.remove(room.getName());
-					sendToSelectionRoom("ROOM" + rooms.keySet().toString());
-				} else {
-					if (room.getHost().equals(username)) {
-						String newHost = "";
-						for (String user : room.getUsers()) {
-							newHost = user;
-							break;
-						}
-
-						room.setHost(newHost);
-						sendPrivately(newHost, "@Game;Host have left the game. You are the new host !");
-					}
-					sendToRoom(room, "!" + room.getUsers());
-
-				}
-			}
-		}
-	}
-
-	// Removing a connection from the outputStreams hash table and closing the
-	// socket
-	public void removeConnection(Socket socket, String username) {
-
-		synchronized (outputStreams) {
-			outputStreams.remove(socket);
-		}
-
-		// Printing out the client along with the IP offline in the format of
-		// ReetAwwsum(123, 12, 21, 21) is offline
-		showMessage("\n" + username + "(" + socket.getInetAddress().getHostAddress() + ") is offline");
-
-	}
-
 	/*
 	 * 
-	 * 
-	 * MAIN LOOP FOR THEGAME ENGINE !
-	 * 
+	 * PARTIE 1 | MOTEUR DE JEU *
 	 * 
 	 */
-
-	// GAME METHODS
 
 	public void startGame(Room location) throws InterruptedException {
 		Set<String> displayUsers = new HashSet<>(location.getUsers());
@@ -437,25 +288,10 @@ public class Server {
 	}
 
 	/*
-	 * Display the name of the room to the user
+	 * 
+	 * PARTIE 2 | GAME METHODS
+	 * 
 	 */
-	public void sendRoomNameToUser(Room room, String username) throws IOException {
-		sendPrivately(username, "@Game;" + "Vous etes dans la Room " + room.getName());
-	}
-
-	/*
-	 * To know if the witch is alive or not
-	 */
-	private boolean witch_Alive(Room room) {
-		for (String player : room.getPlayersAlive()) {
-			if (Role.WITCH.equals(room.getRoleMap().get(player))) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	// ROOM METHOD
 
 	/**
 	 * create a room
@@ -476,10 +312,6 @@ public class Server {
 
 		System.out.println("ok");
 
-	}
-
-	public void menu() {
-		// nothing
 	}
 
 	private boolean gameFinished(Room roomName) {
@@ -677,9 +509,8 @@ public class Server {
 	 * kill him
 	 * 
 	 * @param room
-	 * @param villageVote
-	 *            : true if it is the village vote (one killed mandatory, random if
-	 *            nobody votes)
+	 * @param villageVote : true if it is the village vote (one killed mandatory,
+	 *                    random if nobody votes)
 	 * @return the name of killed player
 	 */
 	public String eliminate(Room room, boolean villageVote) {
@@ -846,6 +677,18 @@ public class Server {
 
 	}
 
+	/*
+	 * To know if the witch is alive or not
+	 */
+	private boolean witch_Alive(Room room) {
+		for (String player : room.getPlayersAlive()) {
+			if (Role.WITCH.equals(room.getRoleMap().get(player))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Join the room entered in parameter
 	 * 
@@ -858,6 +701,183 @@ public class Server {
 		sendToRoom(rooms.get(roomName), rooms.get(roomName).userKey());
 	}
 
+	/*
+	 * 
+	 * PARTIE 3 | COMMUNICATION CLIENT-SERVEUR *
+	 * 
+	 */
+
+	// Waiting for clients to connect
+	public void waitingForClients() throws IOException, ClassNotFoundException {
+
+		while (true) {
+			socket = serverSocket.accept();
+
+			new ServerThread(this, socket);
+		}
+	}
+
+	/**
+	 * sending a message to all available clients in the selectionRoom
+	 * 
+	 * @param data
+	 * @throws IOException
+	 */
+	public void sendToSelectionRoom(String data) throws IOException {
+		String cryptedData = AES.encrypt(data);
+		for (String userName : roomSelection) {
+			synchronized (roomSelection) {
+				ObjectOutputStream tempOutput = clients.get(userName);
+				tempOutput.writeObject(cryptedData);
+				tempOutput.flush();
+
+			}
+		}
+	}
+
+	/**
+	 * send the data to every user in the Room room
+	 * 
+	 * @param data
+	 * @throws IOException
+	 */
+	public void sendToRoom(Room room, String data) throws IOException {
+		String cryptedData = AES.encrypt(data);
+
+		for (String userName : room.getUsers()) {
+			synchronized (clients) {
+				ObjectOutputStream tempOutput = clients.get(userName);
+				if (tempOutput != null) {
+					tempOutput.writeObject(cryptedData);
+					tempOutput.flush();
+				}
+
+			}
+		}
+	}
+
+	/**
+	 * send the data to all user in the Room room
+	 * 
+	 * @param data
+	 * @throws IOException
+	 */
+	public void sendToDeadRoom(Room room, String data) throws IOException {
+		String cryptedData = AES.encrypt(data);
+
+		for (String userName : room.getUsers()) {
+			if (room.getPlayersDead().contains(userName)) {
+
+				synchronized (clients) {
+					ObjectOutputStream tempOutput = clients.get(userName);
+					if (tempOutput != null) {
+						tempOutput.writeObject(cryptedData);
+						tempOutput.flush();
+					}
+
+				}
+			}
+		}
+	}
+
+	// Sending a private Message to the user with the Username
+	public void sendPrivately(String username, String message) throws IOException {
+		String cryptedMessage = AES.encrypt(message);
+		ObjectOutputStream tempOutput = clients.get(username);
+		tempOutput.writeObject(cryptedMessage);
+		tempOutput.flush();
+
+	}
+
+	// Allows wolves to chat with other wolves and to not be seen by other roles
+	public void sendToWolves(Room room, ArrayList<String> usersAlive, String message, String myUsername)
+			throws IOException {
+		for (String user : usersAlive) {
+			if (room.getRoleMap().get(user).equals(Role.WOLF)) {
+				sendPrivately(user, "@Wolf;" + myUsername + ";" + message);
+			}
+		}
+
+	}
+
+	// Removing the client from the client hash table
+	public void removeClient(Room room, String username) throws IOException {
+
+		synchronized (clients) {
+			if (room != null) {
+
+				room.getPlayersAlive().remove(username);
+				room.getPlayersDead().remove(username);
+				room.getRoleMap().remove(username);
+				room.getUsers().remove(username);
+			}
+			clients.remove(username);
+			if (room != null) {
+				if (room.getUsers().isEmpty()) {
+					rooms.remove(room.getName());
+					sendToSelectionRoom("ROOM" + rooms.keySet().toString());
+				} else {
+					if (room.getHost().equals(username)) {
+						String newHost = "";
+						for (String user : room.getUsers()) {
+							newHost = user;
+							break;
+						}
+
+						room.setHost(newHost);
+						sendPrivately(newHost, "@Game;Host have left the game. You are the new host !");
+					}
+					sendToRoom(room, "!" + room.getUsers());
+
+				}
+			}
+		}
+	}
+
+	// Removing a connection from the outputStreams hash table and closing the
+	// socket
+	public void removeConnection(Socket socket, String username) {
+
+		synchronized (outputStreams) {
+			outputStreams.remove(socket);
+		}
+
+		// Printing out the client along with the IP offline in the format of
+		// ReetAwwsum(123, 12, 21, 21) is offline
+		showMessage("\n" + username + "(" + socket.getInetAddress().getHostAddress() + ") is offline");
+
+	}
+
+	/*
+	 * Display the name of the room to the user
+	 */
+	public void sendRoomNameToUser(Room room, String username) throws IOException {
+		sendPrivately(username, "@Game;" + "Vous etes dans la Room " + room.getName());
+	}
+
+	/*
+	 * 
+	 * PARTIE 4 | GUI *
+	 * 
+	 */
+
+	// displaying message on Server GUI
+	public void showMessage(final String message) {
+		SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+				displayWindow.append(message);
+			}
+
+		});
+	}
+
+	/*
+	 * 
+	 * PARTIE 5 | GETTERS/SETTERS
+	 * 
+	 */
 	/**
 	 * @return the roomSelection
 	 */
@@ -873,16 +893,14 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection
-	 *            the roomSelection to set
+	 * @param roomSelection the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms
-	 *            the rooms to set
+	 * @param rooms the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;

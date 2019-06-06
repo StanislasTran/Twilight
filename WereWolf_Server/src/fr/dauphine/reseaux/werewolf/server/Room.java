@@ -11,13 +11,28 @@ import java.util.Set;
 import fr.dauphine.reseaux.werewolf.server.gameObjects.Role;
 import fr.dauphine.reseaux.werewolf.server.gameObjects.Status;
 
-///!!!!\\\ gÃ©rer la dÃ©connexion d'un user dans une room
+/**
+ * 
+ * Salle de jeu, contient toutes les informations du jeu. Chaque room est
+ * indépendante des autres, aucune variable n'est en commun
+ *
+ */
 public class Room {
+
+	// GENERAL ROOM
+
 	private String name;
-	private Set<String> users;
 	private String host;
 	private int maxSize;
+
+	// DONNEES DU JEU
+
+	/**
+	 * Statut du jeu
+	 */
 	private Status status;
+
+	private Set<String> users;
 
 	/**
 	 * Role per player in this room
@@ -53,6 +68,8 @@ public class Room {
 	private ArrayList<String> playersAlive = new ArrayList<>();
 	private LinkedList<String> playersDead = new LinkedList<>();
 
+	// CONSTRUCTEUR
+
 	public Room(String name, String user, int maxSize) {
 		if (maxSize < 2) {
 			throw new IllegalArgumentException("not enough player");
@@ -62,18 +79,19 @@ public class Room {
 		this.users = new HashSet<>();
 		this.users.add(Objects.requireNonNull(user));
 		this.host = user;
-		this.status=Status.WAITING;
+		this.status = Status.WAITING;
 
 	}
 
-	public String getName() {
-		return this.name;
-	}
+	/*
+	 * 
+	 * PARTIE 1 | METHODES PRINCIPALES
+	 * 
+	 */
 
-	public int size() {
-		return this.users.size();
-	}
-
+	/**
+	 * Envoie la liste des joueurs connectés dans la room, avec '!' comme en-tête
+	 */
 	public String userKey() {
 		return "!" + users;
 	}
@@ -88,6 +106,20 @@ public class Room {
 		System.out.println(user + "added success");
 		return "UserAdded";
 
+	}
+
+	/*
+	 * 
+	 * PARTIE 2 | GETTERS / SETTERS
+	 * 
+	 */
+
+	public String getName() {
+		return this.name;
+	}
+
+	public int size() {
+		return this.users.size();
 	}
 
 	/**
@@ -203,11 +235,11 @@ public class Room {
 	public void setUsers(Set<String> users) {
 		this.users = users;
 	}
-	
+
 	public void setStatus(Status status) {
-		this.status=status;
+		this.status = status;
 	}
-	
+
 	public Status getStatus() {
 		return this.status;
 	}

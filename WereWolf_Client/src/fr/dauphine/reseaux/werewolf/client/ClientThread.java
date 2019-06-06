@@ -23,6 +23,12 @@ public class ClientThread implements Runnable {
 		this.SOCK = X;
 	}
 
+	/*
+	 * 
+	 * PARTIE 1 | LANCEMENT DU THREAD D'ECOUTE EN CONTINUE DU CANAL *
+	 * 
+	 */
+
 	@Override
 	public void run() {
 
@@ -36,6 +42,15 @@ public class ClientThread implements Runnable {
 		}
 	}
 
+	/*
+	 * 
+	 * PARTIE 2 | SEND / RECEIVE via deux threads *
+	 * 
+	 */
+
+	/**
+	 * Envoie le message avec pour en-tête '@EE@'
+	 */
 	public void SEND(final String str) throws IOException {
 		String writeStr;
 
@@ -48,6 +63,9 @@ public class ClientThread implements Runnable {
 
 	}
 
+	/**
+	 * 
+	 */
 	public void RECEIVE() {
 		if (!in.equals(null)) {
 			String encryptedMessage = "";
@@ -56,10 +74,7 @@ public class ClientThread implements Runnable {
 				encryptedMessage = (String) in.readObject();
 
 			} catch (ClassNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
 			} catch (IOException e1) {
-
 			}
 
 			String message = AES.decrypt(encryptedMessage);
@@ -75,6 +90,7 @@ public class ClientThread implements Runnable {
 				try {
 
 					SwingUtilities.invokeLater(new Runnable() {
+						@SuppressWarnings("unchecked")
 						@Override
 						public void run() {
 							Client.userOnlineList.setListData(currentUsers);
@@ -119,6 +135,7 @@ public class ClientThread implements Runnable {
 				try {
 
 					SwingUtilities.invokeLater(new Runnable() {
+						@SuppressWarnings("unchecked")
 						@Override
 						public void run() {
 							Client.userOnlineList.setListData(currentUsers);

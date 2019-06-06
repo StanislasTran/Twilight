@@ -9,6 +9,11 @@ import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+/**
+ * 
+ * Classe permettant d'encrypter / décrypter les messages
+ *
+ */
 public class AES {
 
 	private static final SecretKeySpec secretKey = generateKey("lmoksjijiazdon!!!");

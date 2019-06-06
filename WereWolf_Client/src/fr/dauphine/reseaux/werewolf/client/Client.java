@@ -41,6 +41,7 @@ public class Client {
 	private final static boolean TEST = false;
 
 	// NETWORK
+
 	/**
 	 * localhost=true : jeu sur localhost uniquement; localhost=false : jeu en
 	 * réseau local, connexion au serveur à l'adresse indiquée dans 'ipServer'
@@ -286,8 +287,7 @@ public class Client {
 						clientThread.in.close();
 						SOCK.close();
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
+
 					}
 
 					System.exit(0);
@@ -303,8 +303,6 @@ public class Client {
 				try {
 					SUBMIT_ACTION();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
 				}
 			}
 
@@ -370,7 +368,6 @@ public class Client {
 
 	public static void SUBMIT_ACTION() throws IOException {
 		if (!typeText.getText().equals("")) {
-			String[] test = typeText.getText().split(" ");
 			if (typeText.getText().contains("/createRoom") && typeText.getText().split(" ").length > 3) {
 				BuildPopUpWindow("Room name cannot contain spaces !");
 			} else {
