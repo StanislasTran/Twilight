@@ -98,15 +98,28 @@ public class Client {
 	public static JLabel popUpText = new JLabel("");
 	public static JButton popUpEnter = new JButton("Back");
 
-	// Game
+	// GAME
 
 	/**
 	 * Indique l'étape du jeu en cours (Menu selection, Menu room, Tour loup-garou,
-	 * Tour sorciere
+	 * Tour sorciere, tour villageois.
+	 * 
+	 * Cette variable sert lorsqu'on clique sur le pseudonyme du joueur (en haut à
+	 * droite) et permet d'afficher dans la console la commande selon le tour de jeu
+	 * (/vote;/witch_save;/witch_kill;/join)
 	 */
 	public static String roleTurn = "SELECTION";
 
-	@SuppressWarnings("unchecked")
+	/*
+	 * 
+	 * PARTIE 1 | COMMUNICATION CLIENT-SERVEUR *
+	 * 
+	 */
+
+	/**
+	 * Preconnexion sur le serveur pour récupérer la liste des utilisateurs (unicité
+	 * du pseudonyme)
+	 */
 	public static void preConnect() {
 		try {
 			if (localhost) {
@@ -117,14 +130,15 @@ public class Client {
 			}
 			clientThread = new ClientThread(SOCK);
 
-			// sending UserName
+			// sending username
 			output = new ObjectOutputStream(SOCK.getOutputStream());
 
 			clientThread.in = new ObjectInputStream(SOCK.getInputStream());
 
 			// waiting for list of users connected
 			String tmp = (String) clientThread.in.readObject();
-			// toString of a Set
+
+			// toString of a Set, needs reformat
 			tmp = tmp.replaceAll("[\\[\\]]", "");
 
 			for (String user : tmp.split(", ")) {
@@ -138,6 +152,10 @@ public class Client {
 		}
 	}
 
+	/**
+	 * Finalisation de la connexion au serveur, lancement du Thread Client, dont le
+	 * socket et relie au ServerSocket
+	 */
 	public static void Connect() {
 		try {
 
@@ -154,6 +172,12 @@ public class Client {
 		X.start();
 
 	}
+
+	/*
+	 * 
+	 * PARTIE 2 | GRAPHICAL USER INTERFACE (GUI) *
+	 * 
+	 */
 
 	public static void BuildMainWindow() {
 
