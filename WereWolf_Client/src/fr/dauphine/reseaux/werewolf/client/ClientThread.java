@@ -143,13 +143,13 @@ public class ClientThread implements Runnable {
 			}
 
 			else if (message.startsWith("@Wolf;")) {
-				final String pseudo = message.split(";")[1];
-				final String msg = message.split(";")[2];
+				final String[] temp2 = message.split(";");
+				// final String msg = message.split(";")[2];
 
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
-						Client.displayText.append("\n" + "<Wolf " + pseudo + "> " + msg);
+						Client.displayText.append("\n" + "<Wolf " + temp2[1] + "> " + temp2[2]);
 					}
 				});
 			}
