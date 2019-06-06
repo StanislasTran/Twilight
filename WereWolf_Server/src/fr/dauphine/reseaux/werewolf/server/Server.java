@@ -82,7 +82,7 @@ public class Server {
 		}
 	}
 
-	// displaying message on Server Gui
+	// displaying message on Server GUI
 	public void showMessage(final String message) {
 		// TODO Auto-generated method stub
 		SwingUtilities.invokeLater(new Runnable() {
@@ -115,7 +115,7 @@ public class Server {
 	}
 
 	/**
-	 * send the data to all user in the Room room
+	 * send the data to every user in the Room room
 	 * 
 	 * @param data
 	 * @throws IOException
@@ -159,32 +159,13 @@ public class Server {
 		}
 	}
 
-	// Sending a message to all the available clients
-	// public void sendToAll(String data) throws IOException {
-	// String cryptedData =AES.encrypt(data);
-	//
-	// for (Enumeration<ObjectOutputStream> e = getOutputStreams();
-	// e.hasMoreElements();) {
-	// // since we don't want server to remove one client and at the same time
-	// sending
-	// // message to it
-	// synchronized (outputStreams) {
-	// ObjectOutputStream tempOutput = e.nextElement();
-	// tempOutput.writeObject(cryptedData);
-	// tempOutput.flush();
-	// System.out.println("msg send" + cryptedData.toString());
-	//
-	// }
-	// }
-	// }
-
 	// To get Output Stream of the available clients from the hash table
 	private Enumeration<ObjectOutputStream> getOutputStreams() {
 		// TODO Auto-generated method stub
 		return outputStreams.elements();
 	}
 
-	// Sending private message
+	// Sending a private Message to the user with the Username
 	public void sendPrivately(String username, String message) throws IOException {
 		String cryptedMessage = AES.encrypt(message);
 		// TODO Auto-generated method stub
@@ -194,7 +175,7 @@ public class Server {
 
 	}
 
-	// Wolves chat
+	// Allows wolves to chat with other wolves and to not be seen by other roles
 	public void sendToWolves(Room room, ArrayList<String> usersAlive, String message, String myUsername)
 			throws IOException {
 		for (String user : usersAlive) {
@@ -260,6 +241,7 @@ public class Server {
 	 * 
 	 * 
 	 */
+
 	// GAME METHODS
 
 	public void startGame(Room location) throws InterruptedException {
@@ -323,12 +305,6 @@ public class Server {
 
 					String eliminatedPlayerWolf = eliminate(location, false);
 
-					// if (location.getUsers().size() <= 3) {
-					// if (!"".equals(eliminatedPlayerWolf)) {
-					// location.getRoleMap().remove(eliminatedPlayerWolf);
-					// }
-					// }
-
 					sendToRoom(location, "@Narrator;" + "Les loups-garous se rendorment.");
 					Thread.sleep(DUREE_WAIT);
 
@@ -346,9 +322,13 @@ public class Server {
 						if (witch_Alive(location)) {
 							sendToRoom(location, "@Narrator;" + "La sorciere se reveille");
 
-							// Envoie un MP pour lui dire qui est mort;le joueur est rajoute e la liste
-							// des
-							// alives s'il est ressuscite
+							/*
+							 * 
+							 * Send a private message to the witch to inform him which player has been
+							 * killed by the werewolves The dead player is added again to the list of
+							 * players alive if he is resurrected
+							 */
+
 							if (!"".equals(eliminatedPlayerWolf)) {
 								sendToRoom(location, "@ROLETURN;WITCH_SAVE");
 								eliminatedPlayerWolf = sendDeadPlayerToWitch(location);
@@ -367,21 +347,6 @@ public class Server {
 						}
 						Thread.sleep(DUREE_WAIT);
 					}
-
-					/*
-					 * if (location.getUsers().size() > 4) {
-					 * 
-					 * location.setRoleTurn(Role.SEER);
-					 * 
-					 * sendToRoom(location, "@Narrator;" + "La Voyante se reveille");
-					 * sendToRoom(location, "@Timing;" + "Seer turn"); sendToRoom(location,
-					 * "@Narrator;" +
-					 * "Voyante choisissez le joueur dont vous voulez voir la carte");
-					 * 
-					 * // TODO VOYANTE e implementer
-					 * 
-					 * }
-					 */
 
 					// SEND MESSAGE DEAD PERSON TO VILLAGE
 					if (!"".equals(eliminatedPlayerWolf) && !"".equals(eliminatedPlayerWitch)) {
@@ -422,7 +387,7 @@ public class Server {
 
 					/*
 					 * 
-					 * Update user list display to the room with dead people
+					 * Update user list of the room to display to the room with dead people
 					 * 
 					 */
 					if (!eliminatedPlayerWolf.equals("")) {
@@ -443,7 +408,9 @@ public class Server {
 			}
 
 			Thread.sleep(DUREE_WAIT);
-
+			/*
+			 * Display the message of the winner
+			 */
 			if (winner(location).equals(Role.WOLF)) {
 				sendToRoom(location, "@Narrator;Les loups-garous ont gagne !");
 
@@ -469,10 +436,16 @@ public class Server {
 		}
 	}
 
+	/*
+	 * Display the name of the room to the user
+	 */
 	public void sendRoomNameToUser(Room room, String username) throws IOException {
 		sendPrivately(username, "@Game;" + "Vous etes dans la Room " + room.getName());
 	}
 
+	/*
+	 * To know if the witch is alive or not
+	 */
 	private boolean witch_Alive(Room room) {
 		for (String player : room.getPlayersAlive()) {
 			if (Role.WITCH.equals(room.getRoleMap().get(player))) {
@@ -517,6 +490,9 @@ public class Server {
 		return true;
 	}
 
+	/*
+	 * Returns the winner of the room
+	 */
 	private Role winner(Room room) {
 		boolean werewolfWins = true;
 		boolean villajoisWins = true;
@@ -658,12 +634,15 @@ public class Server {
 			room.getRoleMap().put(player, roles.removeFirst());
 		}
 
-		// send to all player their role
+		// send to the players their role
 		for (String player : room.getUsers()) {
 			sendPrivately(player, "@Role;" + room.getRoleMap().get(player).toString());
 		}
 	}
 
+	/*
+	 * Vote management
+	 */
 	public void vote(Room room, String usernameVoter, String playerVoted) throws IOException {
 		if (room.getPlayersAlive().contains(playerVoted)) {
 			room.getVoteMap().put(usernameVoter, playerVoted);
@@ -694,12 +673,13 @@ public class Server {
 	}
 
 	/**
-	 * this function is used for werewolf and villagers to choose an player and kill
-	 * him
+	 * this function is used for werewolves and villagers to choose an player and
+	 * kill him
 	 * 
 	 * @param room
-	 * @param villageVote : true if it is the village vote (one killed mandatory,
-	 *                    random if nobody votes)
+	 * @param villageVote
+	 *            : true if it is the village vote (one killed mandatory, random if
+	 *            nobody votes)
 	 * @return the name of killed player
 	 */
 	public String eliminate(Room room, boolean villageVote) {
@@ -767,12 +747,18 @@ public class Server {
 		return userKilledByVillage;
 	}
 
+	/*
+	 * Update the lists of players alive and the dead players
+	 */
 	public void killPlayer(Room room, String player) {
 		room.getPlayersAlive().remove(player);
 		room.getPlayersDead().addLast(player);
 
 	}
 
+	/*
+	 * Send to the witch which player was killed by the werewolves
+	 */
 	public String sendDeadPlayerToWitch(Room room) throws IOException, InterruptedException {
 		String eliminated = room.getPlayersDead().getLast();
 		for (String player : room.getRoleMap().keySet()) {
@@ -799,6 +785,10 @@ public class Server {
 
 	}
 
+	/*
+	 * Returns the result of whether the witch has decided to save or not the killed
+	 * player
+	 */
 	public void resultWitchSave(Room room, String witchName, String vote) throws IOException {
 		room.setPlayerSaved(false);
 		if (vote.equals("yes")) {
@@ -810,6 +800,9 @@ public class Server {
 		}
 	}
 
+	/*
+	 * Witch killing potion management
+	 */
 	public String witchKillManagement(Room room) throws IOException, InterruptedException {
 		for (String player : room.getRoleMap().keySet()) {
 			if (room.getRoleMap().get(player).equals(Role.WITCH) && room.getWitchKillPower()) {
@@ -837,6 +830,9 @@ public class Server {
 
 	}
 
+	/*
+	 * Result of the witch killing potion
+	 */
 	public void resultWitchKill(Room room, String witchUserName, String playername) throws IOException {
 		if (room.getPlayersAlive().contains(playername)) {
 			room.setPlayerWitchToKill(playername);
@@ -877,14 +873,16 @@ public class Server {
 	}
 
 	/**
-	 * @param roomSelection the roomSelection to set
+	 * @param roomSelection
+	 *            the roomSelection to set
 	 */
 	public void setRoomSelection(Set<String> roomSelection) {
 		this.roomSelection = roomSelection;
 	}
 
 	/**
-	 * @param rooms the rooms to set
+	 * @param rooms
+	 *            the rooms to set
 	 */
 	public void setRooms(Map<String, Room> rooms) {
 		this.rooms = rooms;
