@@ -243,11 +243,11 @@ public class ServerThread extends Thread {
 										"@Game;Vous n'etes pas loup-garou, vous ne pouvez pas voter.");
 							} else {
 								if (command.split(" ") != null && command.split(" ").length > 1) {
-									String wolfMessage = command.split(" ")[1];
+									String[] wolfMessage = command.split(" ", 2);
 									// String wolfMessage = command;
 									System.out.println(wolfMessage);
 									System.out.println(location.getPlayersAlive());
-									server.sendToWolves(location, location.getPlayersAlive(), wolfMessage, username);
+									server.sendToWolves(location, location.getPlayersAlive(), wolfMessage[1], username);
 								}
 							}
 						} else {
@@ -286,7 +286,8 @@ public class ServerThread extends Thread {
 	}
 
 	/**
-	 * @param location the location to set
+	 * @param location
+	 *            the location to set
 	 */
 	public void setLocation(Room location) {
 		this.location = location;
