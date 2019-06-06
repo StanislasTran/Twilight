@@ -1,8 +1,8 @@
 #Jeu du loup-garou
 
 ##Features
-* 2 à 3 players (pour l'instant)
-* Roles : Villageois et Loup-Garou
+* Nombre de joueur illimité (nombre de loup-garous en fonction du nombre de joueurs, 25% minimum)
+* Roles implementés: Villageois, Loup-Garou, Sorcière
 
 ##How to run
 1. Import **WereWolf_Client** and **WereWolf_Server** Projects in Eclipse.
