@@ -1,8 +1,8 @@
 #Jeu du loup-garou
 
 ##Features
-* Nombre de joueur illimité (nombre de loup-garous en fonction du nombre de joueurs, 25% minimum)
-* Roles implementés: Villageois, Loup-Garou, Sorcière
+* Unlimited players (number of werewolves 25% of the player number minimum)
+* Implemented roles: Villager, Werewolf, Witch
 
 ##How to run
 1. Import **WereWolf_Client** and **WereWolf_Server** Projects in Eclipse.
@@ -16,10 +16,24 @@
 1. In Eclipse, go to **Client.java** and modify **TEST** variable to **true**.
 2. Use **run.bat** to start multiple Clients, modify the batch depending the number of clients you need.
 
+##How to play in LAN on different computers
+1. In Eclipse, go to **Client.java** and modify **localhost** variable to **false**.
+2. In Eclipse, go to **Client.java** and modify **ipServer** variable to your iPv4 or iPv6 (CMD -> ipconfig).
+3. Launch Server, then Client on different computers, connected on the same Internet Network.
+4. To play on different Internet Network, please use Hamachi to simulate a LAN (VPN).
+
 ##Commands
 
-* '/start' to start the game
-* '/vote NOM' to vote during the night for werewolves
+* '/createRoom NAME_ROOM NUMBER_OF_PLAYERS_MAX' to create a new room.
+* '/join NAME_ROOM' to join a game room.
+
+* '/start' to start the game.
+* '/vote NAME' for werewolves to vote during the night , and for villagers to vote during the day.
+* '/witch_save yes/no' for witch to save the killed villager.
+* '/witch_kill NAME' for witch to kill a player.
+
+[NEW FEATURE] Double click on one of the player name to put these commands on the textbox automatically (following the status of the game)
+
 
 ##Team Members
 
